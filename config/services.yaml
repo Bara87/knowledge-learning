@@ -11,6 +11,10 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
+        bind:
+            $adminEmail: '%env(ADMIN_EMAIL)%'
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -23,6 +27,12 @@ services:
     App\Service\EmailService:
         arguments:
             $adminEmail: '%env(ADMIN_EMAIL)%'
+
+    App\Service\StripeService:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+            $successUrl: '%env(STRIPE_SUCCESS_URL)%'
+            $cancelUrl: '%env(STRIPE_CANCEL_URL)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
