@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ theme.name }} - Knowledge Learning{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item active">{{ theme.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="theme-header mb-4">
+            <h1>{{ theme.name }}</h1>
+            <p class="lead">{{ theme.description }}</p>
+            
+            {% if is_granted('ROLE_USER') %}
+                {% if app.user.hasCompletedTheme(theme) %}
+                    <div class="certification-badge">
+                        <i class="fas fa-certificate text-warning"></i>
+                        <span>Certification "Knowledge Learning" obtenue</span>
+                        <a href="{{ path('app_certification_download', {'theme': theme.id}) }}" 
+                           class="btn btn-outline-primary btn-sm ms-2">
+                            <i class="fas fa-download"></i> Télécharger le certificat
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="progress-info">
+                        {% set progress = app.user.getThemeProgress(theme) %}
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ progress }}%"
+                                 aria-valuenow="{{ progress }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ progress }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            Progression vers la certification
+                        </small>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="cursus-grid row">
+            {% for cursus in theme.cursus %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="cursus-card card h-100">
+                        {% if cursus.thumbnail %}
+                            <img src="{{ asset(cursus.thumbnail) }}" 
+                                 class="card-img-top" 
+                                 alt="{{ cursus.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h3 class="card-title">{{ cursus.name }}</h3>
+                            <p class="card-text">{{ cursus.description }}</p>
+                            <div class="cursus-meta">
+                                <div class="price">{{ cursus.price }}€</div>
+                                <div class="stats">
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-book"></i> 
+                                        {{ cursus.lessons|length }} leçons
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <i class="far fa-clock"></i> 
+                                        {{ cursus.totalDuration }} heures
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            {% if is_granted('ROLE_USER') and app.user.hasPurchasedCursus(cursus) %}
+                                {% set progress = cursus.getProgressForUser(app.user) %}
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ progress }}%"
+                                         aria-valuenow="{{ progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ progress }}%
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <a href="{{ path('app_cursus_show', {'id': cursus.id}) }}" 
+                               class="btn btn-primary w-100">
+                                Voir le cursus
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if theme.cursus is empty %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i>
+                Aucun cursus n'est disponible pour ce thème pour le moment.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .certification-badge {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .cursus-card {
+            transition: transform 0.2s;
+        }
+        .cursus-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .cursus-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .progress {
+            height: 0.5rem;
+        }
+    </style>
+{% endblock %}

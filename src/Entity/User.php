@@ -6,10 +6,12 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -41,10 +43,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: LessonValidation::class)]
     private Collection $lessonValidations;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Certification::class)]
+    private Collection $certifications;
+
+    #[ORM\Column]
+    private bool $isVerified = false;
+
     public function __construct()
     {
         $this->purchases = new ArrayCollection();
         $this->lessonValidations = new ArrayCollection();
+        $this->certifications = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -179,8 +188,59 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return Collection<int, Certification>
+     */
+    public function getCertifications(): Collection
+    {
+        return $this->certifications;
+    }
+
+    public function addCertification(Certification $certification): static
+    {
+        if (!$this->certifications->contains($certification)) {
+            $this->certifications->add($certification);
+            $certification->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeCertification(Certification $certification): static
+    {
+        if ($this->certifications->removeElement($certification)) {
+            if ($certification->getUser() === $this) {
+                $certification->setUser(null);
+            }
+        }
+        return $this;
+    }
+
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    public function isActivated(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function setVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
     }
 }

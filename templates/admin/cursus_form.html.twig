@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ cursus.id ? 'Modifier' : 'Créer' }} un cursus{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>{{ cursus.id ? 'Modifier' : 'Créer' }} un cursus</h1>
+
+    {{ form_start(form, {'attr': {'class': 'mt-4'}}) }}
+        <div class="mb-3">
+            {{ form_row(form.title) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.description) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.theme) }}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ cursus.id ? 'Modifier' : 'Créer' }}</button>
+        <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

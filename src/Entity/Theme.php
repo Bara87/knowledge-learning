@@ -30,9 +30,13 @@ class Theme
     #[ORM\OneToMany(mappedBy: 'theme', targetEntity: Cursus::class)]
     private Collection $cursus;
 
+    #[ORM\OneToMany(mappedBy: 'theme', targetEntity: Certification::class)]
+    private Collection $certifications;
+
     public function __construct()
     {
         $this->cursus = new ArrayCollection();
+        $this->certifications = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTime();
     }
@@ -108,6 +112,33 @@ class Theme
         if ($this->cursus->removeElement($cursus)) {
             if ($cursus->getTheme() === $this) {
                 $cursus->setTheme(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Certification>
+     */
+    public function getCertifications(): Collection
+    {
+        return $this->certifications;
+    }
+
+    public function addCertification(Certification $certification): static
+    {
+        if (!$this->certifications->contains($certification)) {
+            $this->certifications->add($certification);
+            $certification->setTheme($this);
+        }
+        return $this;
+    }
+
+    public function removeCertification(Certification $certification): static
+    {
+        if ($this->certifications->removeElement($certification)) {
+            if ($certification->getTheme() === $this) {
+                $certification->setTheme(null);
             }
         }
         return $this;

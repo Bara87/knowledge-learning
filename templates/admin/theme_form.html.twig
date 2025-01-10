@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ theme.id ? 'Modifier' : 'Créer' }} un thème{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>{{ theme.id ? 'Modifier' : 'Créer' }} un thème</h1>
+
+    {{ form_start(form, {'attr': {'class': 'mt-4'}}) }}
+        <div class="mb-3">
+            {{ form_row(form.name) }}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ theme.id ? 'Modifier' : 'Créer' }}</button>
+        <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

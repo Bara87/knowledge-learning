@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord administrateur{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Tableau de bord administrateur</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thèmes ({{ themes|length }})</h5>
+                    <a href="{{ path('app_admin_theme_new') }}" class="btn btn-primary btn-sm">Nouveau thème</a>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for theme in themes %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ theme.name }}
+                                <a href="{{ path('app_admin_theme_edit', {'id': theme.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Cursus ({{ cursus|length }})</h5>
+                    <a href="{{ path('app_admin_cursus_new') }}" class="btn btn-primary btn-sm">Nouveau cursus</a>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for c in cursus %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ c.title }}
+                                <a href="{{ path('app_admin_cursus_edit', {'id': c.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Leçons ({{ lessons|length }})</h5>
+                    <a href="{{ path('app_admin_lesson_new') }}" class="btn btn-primary btn-sm">Nouvelle leçon</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Cursus</th>
+                                    <th>Prix</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lesson in lessons %}
+                                    <tr>
+                                        <td>{{ lesson.title }}</td>
+                                        <td>{{ lesson.cursus.title }}</td>
+                                        <td>{{ lesson.price }}€</td>
+                                        <td>
+                                            <a href="{{ path('app_admin_lesson_edit', {'id': lesson.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        {# Messages Flash #}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+        
+        <h1>Mon Profil</h1>
+        
+        {# Informations utilisateur #}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Mes informations</h5>
+                <p class="card-text">Email : {{ app.user.email }}</p>
+            </div>
+        </div>
+
+        {# Mes achats #}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Mes achats</h5>
+                {% if purchases is empty %}
+                    <p>Vous n'avez pas encore effectué d'achats.</p>
+                {% else %}
+                    <div class="list-group">
+                        {% for purchase in purchases %}
+                            <div class="list-group-item">
+                                {% if purchase.cursus %}
+                                    <h6>Cursus : {{ purchase.cursus.title }}</h6>
+                                {% else %}
+                                    <h6>Leçon : {{ purchase.lesson.title }}</h6>
+                                {% endif %}
+                                <small class="text-muted">Acheté le {{ purchase.createdAt|date('d/m/Y') }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Mes leçons validées #}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Mes leçons validées</h5>
+                {% if lessonValidations is empty %}
+                    <p>Vous n'avez pas encore validé de leçons.</p>
+                {% else %}
+                    <div class="list-group">
+                        {% for validation in lessonValidations %}
+                            <div class="list-group-item">
+                                <h6>{{ validation.lesson.title }}</h6>
+                                <small class="text-muted">Validée le {{ validation.validatedAt|date('d/m/Y') }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Mes certifications #}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Mes certifications</h5>
+                {% if certifications is empty %}
+                    <p>Vous n'avez pas encore obtenu de certification.</p>
+                {% else %}
+                    <div class="list-group">
+                        {% for certification in certifications %}
+                            <div class="list-group-item">
+                                <h6>{{ certification.theme.name }}</h6>
+                                <small class="text-muted">Obtenue le {{ certification.obtainedAt|date('d/m/Y') }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

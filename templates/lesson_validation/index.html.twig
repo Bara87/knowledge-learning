@@ -1,20 +1,28 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello LessonValidationController!{% endblock %}
+{% block title %}Mes validations de leçons{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    <div class="container mt-4">
+        <h1>Mes validations de leçons</h1>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/Users/baradia/knowledge-learning/src/Controller/LessonValidationController.php</code></li>
-        <li>Your template at <code>/Users/baradia/knowledge-learning/templates/lesson_validation/index.html.twig</code></li>
-    </ul>
-</div>
+        {% if validations is empty %}
+            <div class="alert alert-info">
+                Vous n'avez pas encore validé de leçons.
+            </div>
+        {% else %}
+            <div class="list-group">
+                {% for validation in validations %}
+                    <div class="list-group-item">
+                        <h5 class="mb-1">{{ validation.lesson.title }}</h5>
+                        <p class="mb-1">Validée le : {{ validation.validatedAt|date('d/m/Y H:i') }}</p>
+                        <a href="{{ path('app_lesson_show', {'id': validation.lesson.id}) }}" 
+                           class="btn btn-sm btn-primary">
+                            Voir la leçon
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

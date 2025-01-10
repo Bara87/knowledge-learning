@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ lesson.id ? 'Modifier' : 'Créer' }} une leçon{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>{{ lesson.id ? 'Modifier' : 'Créer' }} une leçon</h1>
+
+    {{ form_start(form, {'attr': {'class': 'mt-4'}}) }}
+        <div class="mb-3">
+            {{ form_row(form.title) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.content) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.videoUrl) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.price) }}
+        </div>
+        <div class="mb-3">
+            {{ form_row(form.cursus) }}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ lesson.id ? 'Modifier' : 'Créer' }}</button>
+        <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

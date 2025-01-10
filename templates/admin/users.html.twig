@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Gestion des utilisateurs</h1>
+
+    <div class="table-responsive mt-4">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Rôles</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.roles|join(', ') }}</td>
+                        <td>
+                            <span class="badge {% if user.isActive %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ user.isActive ? 'Actif' : 'Inactif' }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ path('app_admin_user_toggle', {'id': user.id}) }}" 
+                               class="btn btn-sm {% if user.isActive %}btn-danger{% else %}btn-success{% endif %}">
+                                {{ user.isActive ? 'Désactiver' : 'Activer' }}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

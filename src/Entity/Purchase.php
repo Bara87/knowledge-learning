@@ -3,55 +3,45 @@
 namespace App\Entity;
 
 use App\Repository\PurchaseRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use DateTimeImmutable;
 
 #[ORM\Entity(repositoryClass: PurchaseRepository::class)]
 class Purchase
 {
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_PAID = 'paid';
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_FAILED = 'failed';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'purchases')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'purchases')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(inversedBy: 'purchases')]
+    #[ORM\ManyToOne(targetEntity: Cursus::class, inversedBy: 'purchases')]
     private ?Cursus $cursus = null;
 
-    #[ORM\ManyToOne(inversedBy: 'purchases')]
+    #[ORM\ManyToOne(targetEntity: Lesson::class, inversedBy: 'purchases')]
     private ?Lesson $lesson = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Assert\NotBlank]
-    #[Assert\Positive]
-    private ?string $amount = null;
+    #[ORM\Column]
+    private float $amount;
 
     #[ORM\Column(length: 255)]
-    private ?string $status = self::STATUS_PENDING;
+    private string $status = 'pending';
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $stripeSessionId = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    #[ORM\Column(length: 255)]
+    private string $stripeSessionId;
 
     #[ORM\Column]
-    private ?\DateTime $updatedAt = null;
+    private DateTimeImmutable $createdAt;
+
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $updatedAt = null;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTime();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -64,7 +54,7 @@ class Purchase
         return $this->user;
     }
 
-    public function setUser(?User $user): static
+    public function setUser(?User $user): self
     {
         $this->user = $user;
         return $this;
@@ -75,7 +65,7 @@ class Purchase
         return $this->cursus;
     }
 
-    public function setCursus(?Cursus $cursus): static
+    public function setCursus(?Cursus $cursus): self
     {
         $this->cursus = $cursus;
         return $this;
@@ -86,86 +76,79 @@ class Purchase
         return $this->lesson;
     }
 
-    public function setLesson(?Lesson $lesson): static
+    public function setLesson(?Lesson $lesson): self
     {
         $this->lesson = $lesson;
         return $this;
     }
 
-    public function getAmount(): ?string
+    public function getAmount(): float
     {
         return $this->amount;
     }
 
-    public function setAmount(string $amount): static
+    public function setAmount(float $amount): self
     {
         $this->amount = $amount;
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(string $status): self
     {
         $this->status = $status;
         return $this;
     }
 
-    public function getStripeSessionId(): ?string
+    public function getStripeSessionId(): string
     {
         return $this->stripeSessionId;
     }
 
-    public function setStripeSessionId(?string $stripeSessionId): static
+    public function setStripeSessionId(string $stripeSessionId): self
     {
         $this->stripeSessionId = $stripeSessionId;
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTime
+    public function getUpdatedAt(): ?DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTime $updatedAt): static
+    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
         return $this;
     }
 
-    #[Assert\Callback]
-    public function validate(ExecutionContextInterface $context, $payload): void
+    public function isCompleted(): bool
     {
-        if (null === $this->cursus && null === $this->lesson) {
-            $context->buildViolation('Un cursus ou une leçon doit être sélectionné')
-                ->atPath('cursus')
-                ->addViolation();
-        }
-
-        if (null !== $this->cursus && null !== $this->lesson) {
-            $context->buildViolation('Vous ne pouvez pas sélectionner à la fois un cursus et une leçon')
-                ->atPath('cursus')
-                ->addViolation();
-        }
+        return $this->status === 'completed';
     }
 
-    #[ORM\PreUpdate]
-    public function updateTimestamp(): void
+    public function isPending(): bool
     {
-        $this->updatedAt = new \DateTime();
+        return $this->status === 'pending';
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === 'expired';
     }
 }

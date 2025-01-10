@@ -1,0 +1,114 @@
+App\Entity\Theme:
+    theme_musique:
+        name: 'Musique'
+        cursus:
+            - '@cursus_guitare'
+            - '@cursus_piano'
+
+    theme_informatique:
+        name: 'Informatique'
+        cursus:
+            - '@cursus_dev_web'
+
+    theme_jardinage:
+        name: 'Jardinage'
+        cursus:
+            - '@cursus_jardinage'
+
+    theme_cuisine:
+        name: 'Cuisine'
+        cursus:
+            - '@cursus_cuisine'
+            - '@cursus_dressage'
+
+App\Entity\Cursus:
+    cursus_guitare:
+        name: "Cursus d'initiation à la guitare"
+        price: 50
+        lessons:
+            - '@lesson_guitare_1'
+            - '@lesson_guitare_2'
+
+    cursus_piano:
+        name: "Cursus d'initiation au piano"
+        price: 50
+        lessons:
+            - '@lesson_piano_1'
+            - '@lesson_piano_2'
+
+    cursus_dev_web:
+        name: "Cursus d'initiation au développement web"
+        price: 60
+        lessons:
+            - '@lesson_web_1'
+            - '@lesson_web_2'
+
+    cursus_jardinage:
+        name: "Cursus d'initiation au jardinage"
+        price: 30
+        lessons:
+            - '@lesson_jardinage_1'
+            - '@lesson_jardinage_2'
+
+    cursus_cuisine:
+        name: "Cursus d'initiation à la cuisine"
+        price: 44
+        lessons:
+            - '@lesson_cuisine_1'
+            - '@lesson_cuisine_2'
+
+    cursus_dressage:
+        name: "Cursus d'initiation à l'art du dressage culinaire"
+        price: 48
+        lessons:
+            - '@lesson_dressage_1'
+            - '@lesson_dressage_2'
+
+App\Entity\Lesson:
+    lesson_guitare_1:
+        name: "Découverte de l'instrument"
+        price: 26
+
+    lesson_guitare_2:
+        name: "Les accords et les gammes"
+        price: 26
+
+    lesson_piano_1:
+        name: "Découverte de l'instrument"
+        price: 26
+
+    lesson_piano_2:
+        name: "Les accords et les gammes"
+        price: 26
+
+    lesson_web_1:
+        name: "Les langages Html et CSS"
+        price: 32
+
+    lesson_web_2:
+        name: "Dynamiser votre site avec Javascript"
+        price: 32
+
+    lesson_jardinage_1:
+        name: "Les outils du jardinier"
+        price: 16
+
+    lesson_jardinage_2:
+        name: "Jardiner avec la lune"
+        price: 16
+
+    lesson_cuisine_1:
+        name: "Les modes de cuisson"
+        price: 23
+
+    lesson_cuisine_2:
+        name: "Les saveurs"
+        price: 23
+
+    lesson_dressage_1:
+        name: "Mettre en œuvre le style dans l'assiette"
+        price: 26
+
+    lesson_dressage_2:
+        name: "Harmoniser un repas à quatre plats"
+        price: 26
