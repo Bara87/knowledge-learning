@@ -1,0 +1,178 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ cursus.name }} - Knowledge Learning{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_theme_show', {'id': cursus.theme.id}) }}">{{ cursus.theme.name }}</a></li>
+                <li class="breadcrumb-item active">{{ cursus.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="cursus-header">
+            <h1>{{ cursus.name }}</h1>
+            <p class="lead">{{ cursus.description }}</p>
+        </div>
+
+        <div class="cursus-details card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h2>À propos de ce cursus</h2>
+                        <p>{{ cursus.longDescription|default(cursus.description) }}</p>
+                        <div class="cursus-stats">
+                            <span class="badge bg-info">{{ cursus.lessons|length }} leçons</span>
+                            <span class="badge bg-secondary">Durée totale: {{ cursus.totalDuration }} heures</span>
+                            <span class="badge bg-primary">Niveau: {{ cursus.level }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="cursus-price-card text-center">
+                            <h3>Prix du cursus complet</h3>
+                            <div class="price-tag">{{ cursus.price }}€</div>
+                            {% if is_granted('ROLE_USER') %}
+                                {% if app.user.isActivated %}
+                                    {% if not app.user.hasPurchasedCursus(cursus) %}
+                                        <a href="{{ path('app_cursus_purchase', {'id': cursus.id}) }}" 
+                                           class="btn btn-primary btn-lg">
+                                            Acheter le cursus
+                                        </a>
+                                    {% else %}
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check"></i> Vous avez accès à ce cursus
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Veuillez activer votre compte pour acheter ce cursus
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ path('app_login') }}" class="btn btn-secondary btn-lg">
+                                    Connectez-vous pour acheter
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lessons-list">
+            <h2>Programme du cursus</h2>
+            {% for lesson in cursus.lessons %}
+                <div class="lesson-card card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h3 class="card-title">{{ lesson.title }}</h3>
+                                <p class="card-text">{{ lesson.description }}</p>
+                                <div class="lesson-meta">
+                                    <span class="duration"><i class="far fa-clock"></i> {{ lesson.duration }} min</span>
+                                    {% if lesson.isValidatedByUser(app.user) %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> Validée
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="lesson-actions text-end">
+                                    {% if is_granted('ROLE_USER') %}
+                                        {% if app.user.isActivated %}
+                                            {% if not is_granted('VIEW', lesson) %}
+                                                <div class="price-tag mb-2">{{ lesson.price }}€</div>
+                                                <a href="{{ path('app_lesson_purchase', {'id': lesson.id}) }}" 
+                                                   class="btn btn-secondary">
+                                                    Acheter cette leçon
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                Activez votre compte pour acheter
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{{ path('app_login') }}" class="btn btn-secondary">
+                                            Connectez-vous pour acheter
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% if is_granted('VIEW', lesson) %}
+                                        <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}" 
+                                           class="btn btn-success">
+                                            <i class="fas fa-play-circle"></i> Accéder au cours
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}" 
+                                           class="btn btn-outline-secondary">
+                                            En savoir plus
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if is_granted('ROLE_USER') and app.user.isActivated %}
+            <div class="progress-section mt-4">
+                <h3>Votre progression</h3>
+                {% set validatedCount = cursus.getValidatedLessonsCount(app.user) %}
+                {% set totalLessons = cursus.lessons|length %}
+                {% set progressPercentage = (validatedCount / totalLessons) * 100 %}
+                
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ progressPercentage }}%"
+                         aria-valuenow="{{ progressPercentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        {{ progressPercentage|round }}%
+                    </div>
+                </div>
+                <p class="text-muted mt-2">
+                    {{ validatedCount }}/{{ totalLessons }} leçons validées
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .cursus-price-card {
+            padding: 2rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .price-tag {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d6efd;
+            margin: 1rem 0;
+        }
+        .lesson-card {
+            transition: transform 0.2s;
+        }
+        .lesson-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .lesson-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .progress {
+            height: 1.5rem;
+        }
+    </style>
+{% endblock %}

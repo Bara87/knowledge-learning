@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class CourseController extends AbstractController
 {
@@ -25,6 +26,7 @@ class CourseController extends AbstractController
     #[Route('/theme/{id}', name: 'app_theme_show')]
     public function showTheme(Theme $theme): Response
     {
+        // Les thèmes sont toujours visibles, pas besoin de vérification d'accès
         return $this->render('course/theme.html.twig', [
             'theme' => $theme,
         ]);
@@ -33,6 +35,19 @@ class CourseController extends AbstractController
     #[Route('/cursus/{id}', name: 'app_cursus_show')]
     public function showCursus(Cursus $cursus): Response
     {
+        // Vérifier si l'utilisateur est connecté et a les droits d'accès
+        if (!$this->isGranted('VIEW', $cursus)) {
+            if (!$this->isGranted('ROLE_USER')) {
+                $this->addFlash('warning', 'Veuillez vous connecter pour accéder à ce cursus.');
+                return $this->redirectToRoute('app_login');
+            }
+            
+            $this->addFlash('info', 'Vous devez acheter ce cursus pour y accéder.');
+            return $this->redirectToRoute('app_purchase_cursus', [
+                'id' => $cursus->getId()
+            ]);
+        }
+
         return $this->render('course/cursus.html.twig', [
             'cursus' => $cursus,
         ]);
@@ -41,11 +56,51 @@ class CourseController extends AbstractController
     #[Route('/lesson/{id}', name: 'app_lesson_show')]
     public function showLesson(Lesson $lesson): Response
     {
-        // Vérifier si l'utilisateur a acheté la leçon
-        $this->denyAccessUnlessGranted('VIEW', $lesson);
+        // Vérifier si l'utilisateur est connecté et a les droits d'accès
+        if (!$this->isGranted('VIEW', $lesson)) {
+            if (!$this->isGranted('ROLE_USER')) {
+                $this->addFlash('warning', 'Veuillez vous connecter pour accéder à cette leçon.');
+                return $this->redirectToRoute('app_login');
+            }
+
+            // Si le cursus parent est déjà acheté, pas besoin d'acheter la leçon individuellement
+            if ($lesson->getCursus() && $this->isGranted('VIEW', $lesson->getCursus())) {
+                return $this->render('course/lesson.html.twig', [
+                    'lesson' => $lesson,
+                ]);
+            }
+            
+            $this->addFlash('info', 'Vous devez acheter cette leçon pour y accéder.');
+            return $this->redirectToRoute('app_purchase_lesson', [
+                'id' => $lesson->getId()
+            ]);
+        }
 
         return $this->render('course/lesson.html.twig', [
             'lesson' => $lesson,
         ]);
     }
+
+    #[Route('/cursus/{id}/lessons', name: 'app_cursus_lessons')]
+    public function cursusLessons(Cursus $cursus): Response
+    {
+        if (!$this->isGranted('VIEW', $cursus)) {
+            if (!$this->isGranted('ROLE_USER')) {
+                $this->addFlash('warning', 'Veuillez vous connecter pour accéder aux leçons.');
+                return $this->redirectToRoute('app_login');
+            }
+
+            $this->addFlash('info', 'Vous devez acheter ce cursus pour accéder aux leçons.');
+            return $this->redirectToRoute('app_purchase_cursus', [
+                'id' => $cursus->getId()
+            ]);
+        }
+
+        return $this->render('course/cursus_lessons.html.twig', [
+            'cursus' => $cursus,
+            'lessons' => $cursus->getLessons()
+        ]);
+    }
+
+   
 }

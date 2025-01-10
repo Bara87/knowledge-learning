@@ -114,4 +114,31 @@ class AdminController extends AbstractController
             'cursus' => $cursus,
         ]);
     }
+
+    #[Route('/lesson/new', name: 'app_admin_lesson_new')]
+    #[Route('/lesson/{id}/edit', name: 'app_admin_lesson_edit')]
+    public function lessonForm(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ?Lesson $lesson = null
+    ): Response {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $lesson = $lesson ?? new Lesson();
+        $form = $this->createForm(LessonType::class, $lesson);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($lesson);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'La leçon a été sauvegardée.');
+            return $this->redirectToRoute('app_admin_dashboard');
+        }
+
+        return $this->render('admin/lesson_form.html.twig', [
+            'form' => $form->createView(),
+            'lesson' => $lesson,
+        ]);
+    }
 }

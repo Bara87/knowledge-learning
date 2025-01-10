@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Découvrez nos thèmes de formation{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="text-center mb-5">Nos Thèmes de Formation</h1>
+        
+        <div class="row mt-4">
+            {% if themes %}
+                {% for theme in themes %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <a href="{{ path('app_theme_show', {'id': theme.id}) }}" class="text-decoration-none text-dark">
+                                        {{ theme.name }}
+                                    </a>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if theme.description %}
+                                    <p class="card-text">{{ theme.description }}</p>
+                                {% else %}
+                                    <p class="card-text text-muted"><em>Aucune description disponible</em></p>
+                                {% endif %}
+
+                                {% if theme.cursus|length > 0 %}
+                                    <div class="mt-3">
+                                        <h6 class="mb-2">Cursus disponibles ({{ theme.cursus|length }}) :</h6>
+                                        <ul class="list-group list-group-flush">
+                                            {% for cursus in theme.cursus|slice(0, 3) %}
+                                                <li class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <strong>
+                                                                <a href="{{ path('app_cursus_show', {'id': cursus.id}) }}" class="text-decoration-none">
+                                                                    {{ cursus.title }}
+                                                                </a>
+                                                            </strong>
+                                                            {% if cursus.lessons|length > 0 %}
+                                                                <small class="d-block text-muted">
+                                                                    {{ cursus.lessons|length }} leçon(s)
+                                                                </small>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if cursus.price %}
+                                                            <span class="badge bg-primary">{{ cursus.price }}€</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if cursus.lessons|length > 0 %}
+                                                        <ul class="list-unstyled ms-3 mt-2 small">
+                                                            {% for lesson in cursus.lessons|slice(0, 2) %}
+                                                                <li>
+                                                                    - <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}" class="text-decoration-none">
+                                                                        {{ lesson.title }}
+                                                                    </a>
+                                                                    {% if lesson.price %}
+                                                                        <span class="text-muted">({{ lesson.price }}€)</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endfor %}
+                                                            {% if cursus.lessons|length > 2 %}
+                                                                <li class="text-muted">+ {{ cursus.lessons|length - 2 }} autres leçons</li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                            {% if theme.cursus|length > 3 %}
+                                                <li class="list-group-item text-muted">
+                                                    Et {{ theme.cursus|length - 3 }} autres...
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        Créé le {{ theme.createdAt|date('d/m/Y') }}
+                                        {% if theme.updatedAt != theme.createdAt %}
+                                            <br>Mis à jour le {{ theme.updatedAt|date('d/m/Y') }}
+                                        {% endif %}
+                                    </small>
+                                    <a href="{{ path('app_theme_show', {'id': theme.id}) }}" class="btn btn-primary">
+                                        Voir les détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Aucun thème n'est disponible pour le moment.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .badge {
+            font-size: 0.9em;
+        }
+        .list-group-item {
+            padding: 0.75rem 1.25rem;
+        }
+        .card-footer {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .btn-primary {
+            padding: 0.375rem 1rem;
+        }
+        .text-decoration-none:hover {
+            color: #0056b3;
+        }
+    </style>
+{% endblock %}

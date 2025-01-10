@@ -21,7 +21,7 @@ class EmailService
             ->from($this->adminEmail)
             ->to($user->getEmail())
             ->subject('Activation de votre compte')
-            ->html($this->twig->render('emails/activation.html.twig', [
+            ->html($this->twig->render('service/activation.html.twig', [
                 'user' => $user,
                 'activation_url' => $activationUrl
             ]));

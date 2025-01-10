@@ -1,0 +1,236 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ lesson.title }} - Knowledge Learning{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_theme_show', {'id': lesson.cursus.theme.id}) }}">
+                        {{ lesson.cursus.theme.name }}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_cursus_show', {'id': lesson.cursus.id}) }}">
+                        {{ lesson.cursus.name }}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{{ lesson.title }}</li>
+            </ol>
+        </nav>
+
+        {% if not is_granted('VIEW', lesson) %}
+            <div class="alert alert-warning">
+                <h4 class="alert-heading">Accès restreint</h4>
+                <p>Cette leçon fait partie du cursus "{{ lesson.cursus.name }}".</p>
+                
+                {% if is_granted('ROLE_USER') %}
+                    {% if app.user.isActivated %}
+                        <div class="purchase-options">
+                            <p>Options d'achat :</p>
+                            <div class="d-flex gap-3">
+                                <a href="{{ path('app_lesson_purchase', {'id': lesson.id}) }}" 
+                                   class="btn btn-primary">
+                                    Acheter cette leçon ({{ lesson.price }}€)
+                                </a>
+                                <a href="{{ path('app_cursus_purchase', {'id': lesson.cursus.id}) }}" 
+                                   class="btn btn-outline-primary">
+                                    Acheter le cursus complet ({{ lesson.cursus.price }}€)
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Veuillez activer votre compte pour acheter cette leçon.
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ path('app_login') }}" class="btn btn-secondary">
+                        Connectez-vous pour accéder à cette leçon
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="lesson-content">
+                <div class="lesson-header mb-4">
+                    <h1>{{ lesson.title }}</h1>
+                    <p class="lead">{{ lesson.description }}</p>
+                    <div class="lesson-meta">
+                        <span class="duration">
+                            <i class="far fa-clock"></i> {{ lesson.duration }} minutes
+                        </span>
+                        {% if lesson.difficulty %}
+                            <span class="difficulty">
+                                <i class="fas fa-signal"></i> 
+                                Niveau {{ lesson.difficulty }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if lesson.videoUrl %}
+                    <div class="video-container mb-4">
+                        <div class="ratio ratio-16x9">
+                            <video controls class="rounded">
+                                <source src="{{ lesson.videoUrl }}" type="video/mp4">
+                                Votre navigateur ne supporte pas la lecture de vidéos.
+                            </video>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="lesson-text card mb-4">
+                    <div class="card-body">
+                        {{ lesson.content|raw }}
+                    </div>
+                </div>
+
+                {% if lesson.attachments|length > 0 %}
+                    <div class="attachments-section card mb-4">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                <i class="fas fa-paperclip"></i> 
+                                Documents joints
+                            </h3>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            {% for attachment in lesson.attachments %}
+                                <a href="{{ asset(attachment.path) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="fas fa-file"></i> 
+                                        {{ attachment.name }}
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ attachment.size|format_bytes }}
+                                    </span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if is_granted('ROLE_USER') %}
+                    <div class="lesson-validation card mb-4">
+                        <div class="card-body">
+                            {% if not lesson.isValidatedByUser(app.user) %}
+                                <form method="POST" action="{{ path('app_lesson_validate', {'id': lesson.id}) }}" 
+                                      class="text-center">
+                                    <p>Avez-vous terminé cette leçon ?</p>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check"></i> 
+                                        Valider cette leçon
+                                    </button>
+                                </form>
+                            {% else %}
+                                <div class="text-center text-success">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                    <p class="mb-0">Leçon validée le {{ lesson.getValidationDate(app.user)|date('d/m/Y') }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="lesson-navigation d-flex justify-content-between">
+                    {% if lesson.previous %}
+                        <a href="{{ path('app_lesson_show', {'id': lesson.previous.id}) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> 
+                            Leçon précédente
+                        </a>
+                    {% else %}
+                        <div></div>
+                    {% endif %}
+
+                    {% if lesson.next %}
+                        <a href="{{ path('app_lesson_show', {'id': lesson.next.id}) }}" 
+                           class="btn btn-outline-primary">
+                            Leçon suivante 
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_cursus_show', {'id': lesson.cursus.id}) }}" 
+                           class="btn btn-outline-success">
+                            Terminer le cursus 
+                            <i class="fas fa-flag-checkered"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .lesson-meta {
+            display: flex;
+            gap: 1rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        
+        .video-container {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .lesson-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .lesson-text h2 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .lesson-text img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .lesson-validation {
+            background-color: #f8f9fa;
+        }
+        
+        .attachments-section .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .lesson-navigation {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Optionnel : Suivre la progression de la vidéo
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            if (video) {
+                video.addEventListener('ended', function() {
+                    // Suggérer la validation de la leçon
+                    if (!document.querySelector('.lesson-validation .text-success')) {
+                        const validateBtn = document.querySelector('.lesson-validation button');
+                        if (validateBtn) {
+                            validateBtn.classList.add('btn-lg');
+                            validateBtn.classList.add('pulse');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

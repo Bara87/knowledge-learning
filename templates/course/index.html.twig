@@ -1,20 +1,25 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello CourseController!{% endblock %}
+{% block title %}Knowledge Learning - Accueil{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
-
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/Users/baradia/knowledge-learning/src/Controller/CourseController.php</code></li>
-        <li>Your template at <code>/Users/baradia/knowledge-learning/templates/course/index.html.twig</code></li>
-    </ul>
-</div>
+    <div class="container">
+        <h1>Bienvenue sur Knowledge Learning</h1>
+        
+        <div class="themes-grid">
+            {% for theme in themes %}
+                <div class="theme-card">
+                    <h2>{{ theme.name }}</h2>
+                    <p>{{ theme.description }}</p>
+                    <div class="cursus-count">
+                        {{ theme.cursus|length }} cursus disponibles
+                    </div>
+                    <a href="{{ path('app_theme_show', {'id': theme.id}) }}" 
+                       class="btn btn-primary">
+                        Découvrir
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 {% endblock %}
