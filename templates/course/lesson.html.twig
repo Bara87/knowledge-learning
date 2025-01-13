@@ -14,7 +14,7 @@
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ path('app_cursus_show', {'id': lesson.cursus.id}) }}">
-                        {{ lesson.cursus.name }}
+                        {{ lesson.cursus.title }}
                     </a>
                 </li>
                 <li class="breadcrumb-item active">{{ lesson.title }}</li>
@@ -56,67 +56,48 @@
             <div class="lesson-content">
                 <div class="lesson-header mb-4">
                     <h1>{{ lesson.title }}</h1>
-                    <p class="lead">{{ lesson.description }}</p>
+                    <p class="lead">{{ lesson.content|striptags|slice(0, 200) ~ '...' }}</p>
                     <div class="lesson-meta">
                         <span class="duration">
                             <i class="far fa-clock"></i> {{ lesson.duration }} minutes
                         </span>
-                        {% if lesson.difficulty %}
-                            <span class="difficulty">
-                                <i class="fas fa-signal"></i> 
-                                Niveau {{ lesson.difficulty }}
-                            </span>
-                        {% endif %}
                     </div>
                 </div>
 
-                {% if lesson.videoUrl %}
-                    <div class="video-container mb-4">
-                        <div class="ratio ratio-16x9">
+                <div class="video-container mb-4 mx-auto" style="width: 70%;">
+                    <div class="ratio ratio-16x9 video-wrapper">
+                        {% if lesson.youtubeEmbedUrl %}
+                            <iframe 
+                                src="{{ lesson.youtubeEmbedUrl }}?rel=0&modestbranding=1&autoplay=0"
+                                title="{{ lesson.title }}"
+                                class="rounded"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>
+                        {% elseif lesson.videoUrl %}
                             <video controls class="rounded">
                                 <source src="{{ lesson.videoUrl }}" type="video/mp4">
                                 Votre navigateur ne supporte pas la lecture de vidéos.
                             </video>
-                        </div>
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center bg-light rounded h-100">
+                                <p class="text-muted">Aucune vidéo disponible pour cette leçon</p>
+                            </div>
+                        {% endif %}
                     </div>
-                {% endif %}
+                </div>
 
                 <div class="lesson-text card mb-4">
                     <div class="card-body">
                         {{ lesson.content|raw }}
                     </div>
-                </div>
-
-                {% if lesson.attachments|length > 0 %}
-                    <div class="attachments-section card mb-4">
-                        <div class="card-header">
-                            <h3 class="mb-0">
-                                <i class="fas fa-paperclip"></i> 
-                                Documents joints
-                            </h3>
-                        </div>
-                        <div class="list-group list-group-flush">
-                            {% for attachment in lesson.attachments %}
-                                <a href="{{ asset(attachment.path) }}" 
-                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <span>
-                                        <i class="fas fa-file"></i> 
-                                        {{ attachment.name }}
-                                    </span>
-                                    <span class="badge bg-primary rounded-pill">
-                                        {{ attachment.size|format_bytes }}
-                                    </span>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
+                </div>                
 
                 {% if is_granted('ROLE_USER') %}
                     <div class="lesson-validation card mb-4">
                         <div class="card-body">
                             {% if not lesson.isValidatedByUser(app.user) %}
-                                <form method="POST" action="{{ path('app_lesson_validate', {'id': lesson.id}) }}" 
+                                <form method="POST" action="{{ path('app_validate_lesson', {'id': lesson.id}) }}" 
                                       class="text-center">
                                     <p>Avez-vous terminé cette leçon ?</p>
                                     <button type="submit" class="btn btn-success">
@@ -127,7 +108,12 @@
                             {% else %}
                                 <div class="text-center text-success">
                                     <i class="fas fa-check-circle fa-2x"></i>
-                                    <p class="mb-0">Leçon validée le {{ lesson.getValidationDate(app.user)|date('d/m/Y') }}</p>
+                                    {% set validationDate = lesson.getValidationDate(app.user) %}
+                                    {% if validationDate %}
+                                        <p class="mb-0">Leçon validée le {{ validationDate|date('d/m/Y') }}</p>
+                                    {% else %}
+                                        <p class="mb-0">Leçon validée</p>
+                                    {% endif %}
                                 </div>
                             {% endif %}
                         </div>
@@ -170,7 +156,7 @@
         .lesson-meta {
             display: flex;
             gap: 1rem;
-            color: #6c757d;
+            color: var(--color-neutral);
             margin-bottom: 1rem;
         }
         
@@ -178,6 +164,17 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 0.5rem;
             overflow: hidden;
+        }
+        
+        .video-container iframe,
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .ratio-16x9 {
+            --bs-aspect-ratio: 56.25%;
         }
         
         .lesson-text {
@@ -198,7 +195,7 @@
         }
         
         .lesson-validation {
-            background-color: #f8f9fa;
+            background-color: var(--color-light);
         }
         
         .attachments-section .list-group-item:hover {
@@ -209,6 +206,18 @@
             margin-top: 2rem;
             padding-top: 2rem;
             border-top: 1px solid #dee2e6;
+        }
+        
+        .video-wrapper {
+            max-width: 600px;  /* Réduit de 800px à 600px */
+            margin: 0 auto;    /* garde le centrage */
+        }
+        
+        .video-container {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: #000;  /* fond noir pour les vidéos */
         }
     </style>
 {% endblock %}

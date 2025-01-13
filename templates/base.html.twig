@@ -9,7 +9,75 @@
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-        {% block stylesheets %}{% endblock %}
+        {% block stylesheets %}
+            <style>
+                :root {
+                    /* Palette de couleurs principale */
+                    --color-light: #f1f8fc;    /* Bleu très clair */
+                    --color-primary: #0074c7;  /* Bleu moyen */
+                    --color-dark: #00497c;     /* Bleu foncé */
+                    --color-neutral: #384050;  /* Gris bleuté */
+                    
+                    /* Couleurs d'accentuation (à utiliser avec parcimonie) */
+                    --color-accent-red: #cd2c2e;    /* Rouge */
+                    --color-accent-green: #82b864;  /* Vert */
+                }
+
+                body {
+                    font-family: 'Comic Sans MS', cursive, sans-serif;
+                    color: var(--color-neutral);
+                    background-color: var(--color-light);
+                }
+
+                /* Boutons principaux */
+                .btn-primary {
+                    background-color: var(--color-primary);
+                    border-color: var(--color-primary);
+                }
+                .btn-primary:hover {
+                    background-color: var(--color-dark);
+                    border-color: var(--color-dark);
+                }
+
+                /* Liens */
+                a {
+                    color: var(--color-primary);
+                }
+                a:hover {
+                    color: var(--color-dark);
+                }
+
+                /* Badges et alertes */
+                .badge.bg-primary {
+                    background-color: var(--color-primary) !important;
+                }
+                .badge.bg-secondary {
+                    background-color: var(--color-neutral) !important;
+                }
+                
+                /* Alertes de succès/erreur (utilisation parcimonieuse des couleurs d'accent) */
+                .alert-success {
+                    background-color: var(--color-accent-green);
+                    border-color: var(--color-accent-green);
+                    color: white;
+                }
+                .alert-danger {
+                    background-color: var(--color-accent-red);
+                    border-color: var(--color-accent-red);
+                    color: white;
+                }
+
+                /* Headers et titres */
+                h1, h2, h3, h4, h5, h6 {
+                    color: var(--color-dark);
+                }
+
+                /* Progress bars */
+                .progress-bar {
+                    background-color: var(--color-primary);
+                }
+            </style>
+        {% endblock %}
     </head>
     <body>
         <header>
@@ -28,7 +96,7 @@
                             </li>
                             {% if app.user %}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ path('app_lesson_validations') }}">Mes certifications</a>
+                                    <a class="nav-link" href="{{ path('app_certification_index') }}">Mes certifications</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ path('app_profile') }}">Mon profil</a>

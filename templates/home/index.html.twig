@@ -6,10 +6,10 @@
     <div class="container mt-4">
         <h1 class="text-center mb-5">Nos Thèmes de Formation</h1>
         
-        <div class="row mt-4">
+        <div class="row justify-content-start">
             {% if themes %}
                 {% for theme in themes %}
-                    <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="col-12 col-md-6 mb-4">
                         <div class="card h-100 shadow-sm">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
@@ -19,18 +19,11 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                {% if theme.description %}
-                                    <p class="card-text">{{ theme.description }}</p>
-                                {% else %}
-                                    <p class="card-text text-muted"><em>Aucune description disponible</em></p>
-                                {% endif %}
-
                                 {% if theme.cursus|length > 0 %}
                                     <div class="mt-3">
-                                        <h6 class="mb-2">Cursus disponibles ({{ theme.cursus|length }}) :</h6>
                                         <ul class="list-group list-group-flush">
                                             {% for cursus in theme.cursus|slice(0, 3) %}
-                                                <li class="list-group-item">
+                                                <li class="list-group-item {% if app.user and cursus.purchases|filter(p => p.user == app.user)|length > 0 %}purchased{% endif %}">
                                                     <div class="d-flex justify-content-between align-items-start">
                                                         <div>
                                                             <strong>
@@ -38,6 +31,9 @@
                                                                     {{ cursus.title }}
                                                                 </a>
                                                             </strong>
+                                                            {% if app.user and cursus.purchases|filter(p => p.user == app.user)|length > 0 %}
+                                                                <span class="badge bg-success ms-2">Acheté</span>
+                                                            {% endif %}
                                                             {% if cursus.lessons|length > 0 %}
                                                                 <small class="d-block text-muted">
                                                                     {{ cursus.lessons|length }} leçon(s)
@@ -45,16 +41,21 @@
                                                             {% endif %}
                                                         </div>
                                                         {% if cursus.price %}
-                                                            <span class="badge bg-primary">{{ cursus.price }}€</span>
+                                                            <span class="badge {% if app.user and cursus.purchases|filter(p => p.user == app.user)|length > 0 %}bg-success{% else %}bg-primary{% endif %}">
+                                                                {{ cursus.price }}€
+                                                            </span>
                                                         {% endif %}
                                                     </div>
                                                     {% if cursus.lessons|length > 0 %}
                                                         <ul class="list-unstyled ms-3 mt-2 small">
                                                             {% for lesson in cursus.lessons|slice(0, 2) %}
-                                                                <li>
+                                                                <li class="{% if app.user and lesson.purchases|filter(p => p.user == app.user)|length > 0 %}purchased-lesson{% endif %}">
                                                                     - <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}" class="text-decoration-none">
                                                                         {{ lesson.title }}
                                                                     </a>
+                                                                    {% if app.user and lesson.purchases|filter(p => p.user == app.user)|length > 0 %}
+                                                                        <span class="badge bg-success ms-1">Acheté</span>
+                                                                    {% endif %}
                                                                     {% if lesson.price %}
                                                                         <span class="text-muted">({{ lesson.price }}€)</span>
                                                                     {% endif %}
@@ -108,25 +109,40 @@
     {{ parent() }}
     <style>
         .card {
+            border-color: var(--color-light);
             transition: transform 0.2s ease-in-out;
         }
         .card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .badge {
-            font-size: 0.9em;
+        .card-header {
+            background-color: var(--color-light);
         }
-        .list-group-item {
-            padding: 0.75rem 1.25rem;
+        .text-muted {
+            color: var(--color-neutral) !important;
+        }
+        .badge.bg-primary {
+            background-color: var(--color-primary) !important;
+        }
+        .badge.bg-success {
+            background-color: #28a745 !important;
         }
         .card-footer {
-            background-color: rgba(0, 0, 0, 0.03);
-        }
-        .btn-primary {
-            padding: 0.375rem 1rem;
+            background-color: var(--color-light);
         }
         .text-decoration-none:hover {
-            color: #0056b3;
+            color: var(--color-primary);
+        }
+        .purchased {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 3px solid #28a745;
+        }
+        .purchased-lesson {
+            color: #28a745;
+        }
+        .purchased .badge.bg-success {
+            opacity: 0.9;
         }
     </style>
 {% endblock %}

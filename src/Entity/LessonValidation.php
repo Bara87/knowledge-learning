@@ -32,9 +32,13 @@ class LessonValidation
     #[ORM\Column]
     private ?\DateTimeImmutable $validatedAt = null;
 
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
     public function __construct()
     {
         $this->validatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -73,5 +77,21 @@ class LessonValidation
     {
         $this->validatedAt = $validatedAt;
         return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    public function isValidated(): bool
+    {
+        return true;
     }
 }

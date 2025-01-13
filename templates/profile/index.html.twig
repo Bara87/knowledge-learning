@@ -2,6 +2,38 @@
 
 {% block title %}Mon Profil{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .alert-success {
+            background-color: var(--color-accent-green);
+            border-color: var(--color-accent-green);
+            color: white;
+        }
+        .card {
+            border-color: var(--color-light);
+        }
+        .card-body {
+            background-color: var(--color-light);
+        }
+        .text-muted {
+            color: var(--color-neutral) !important;
+        }
+        .text-decoration-none {
+            color: var(--color-dark);
+        }
+        .text-decoration-none:hover {
+            color: var(--color-primary);
+        }
+        .list-group-item {
+            transition: background-color 0.2s;
+        }
+        .list-group-item:hover {
+            background-color: var(--color-light);
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
     <div class="container py-4">
         {# Messages Flash #}
@@ -32,9 +64,17 @@
                         {% for purchase in purchases %}
                             <div class="list-group-item">
                                 {% if purchase.cursus %}
-                                    <h6>Cursus : {{ purchase.cursus.title }}</h6>
+                                    <h6>
+                                        <a href="{{ path('app_cursus_show', {'id': purchase.cursus.id}) }}" class="text-decoration-none">
+                                            Cursus : {{ purchase.cursus.title }}
+                                        </a>
+                                    </h6>
                                 {% else %}
-                                    <h6>Leçon : {{ purchase.lesson.title }}</h6>
+                                    <h6>
+                                        <a href="{{ path('app_lesson_show', {'id': purchase.lesson.id}) }}" class="text-decoration-none">
+                                            Leçon : {{ purchase.lesson.title }}
+                                        </a>
+                                    </h6>
                                 {% endif %}
                                 <small class="text-muted">Acheté le {{ purchase.createdAt|date('d/m/Y') }}</small>
                             </div>
@@ -54,7 +94,11 @@
                     <div class="list-group">
                         {% for validation in lessonValidations %}
                             <div class="list-group-item">
-                                <h6>{{ validation.lesson.title }}</h6>
+                                <h6>
+                                    <a href="{{ path('app_lesson_show', {'id': validation.lesson.id}) }}" class="text-decoration-none">
+                                        {{ validation.lesson.title }}
+                                    </a>
+                                </h6>
                                 <small class="text-muted">Validée le {{ validation.validatedAt|date('d/m/Y') }}</small>
                             </div>
                         {% endfor %}
@@ -72,9 +116,16 @@
                 {% else %}
                     <div class="list-group">
                         {% for certification in certifications %}
-                            <div class="list-group-item">
-                                <h6>{{ certification.theme.name }}</h6>
-                                <small class="text-muted">Obtenue le {{ certification.obtainedAt|date('d/m/Y') }}</small>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>{{ certification.theme.name }}</h6>
+                                    <small class="text-muted">Obtenue le {{ certification.obtainedAt|date('d/m/Y') }}</small>
+                                </div>
+                                <a href="{{ path('app_certification_download', {'theme': certification.theme.id}) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-download"></i> 
+                                    Télécharger
+                                </a>
                             </div>
                         {% endfor %}
                     </div>

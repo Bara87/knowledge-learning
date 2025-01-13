@@ -15,62 +15,83 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
+use Psr\Log\LoggerInterface;
+use App\Service\EmailService;
 
 class RegistrationController extends AbstractController
 {
     public function __construct(
-        private string $fromEmail
+        private string $fromEmail,
+        private string $adminCode
     ) {}
 
     #[Route('/register', name: 'app_register')]
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
-        UserAuthenticatorInterface $userAuthenticator,
-        LoginFormAuthenticator $authenticator,
         EntityManagerInterface $entityManager,
-        MailerInterface $mailer
+        EmailService $emailService,
+        LoggerInterface $logger
     ): Response {
+        $logger->info('Début du processus d\'inscription');
+        
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
-
-            // encode the plain password
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            $logger->info('Formulaire soumis et valide');
             
-            // Générer et définir le token d'activation
-            $user->setActivationToken(bin2hex(random_bytes(32)));
-            
-            // Définir les états initiaux de l'utilisateur
-            $user->setIsVerified(false);
-            $user->setIsActive(false);
+            try {
+                // Vérifier le code admin
+                $adminCode = $form->get('adminCode')->getData();
+                $logger->info('Code admin vérifié', ['isAdmin' => ($adminCode === $this->adminCode)]);
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+                if ($adminCode === $this->adminCode) {
+                    $user->setRoles(['ROLE_ADMIN']);
+                } else {
+                    $user->setRoles(['ROLE_USER']);
+                }
 
-            // Génération de l'URL d'activation
-            $activationUrl = $this->generateUrl('app_verify_email', [
-                'token' => $user->getActivationToken()
-            ], UrlGeneratorInterface::ABSOLUTE_URL);
+                // Hasher le mot de passe
+                $user->setPassword($userPasswordHasher->hashPassword($user, $form->get('plainPassword')->getData()));
+                $logger->info('Mot de passe hashé');
 
-            // Création et envoi de l'email
-            $email = (new Email())
-                ->from($this->fromEmail)
-                ->to($user->getEmail())
-                ->subject('Activation de votre compte')
-                ->html("<p>Cliquez sur ce lien pour activer votre compte : <a href='{$activationUrl}'>Activer mon compte</a></p>");
+                // Générer le token d'activation
+                $user->setActivationToken(bin2hex(random_bytes(32)));
+                $user->setIsVerified(false);
+                $user->setIsActive(false);
+                $logger->info('Token généré et statuts initialisés');
 
-            $mailer->send($email);
+                $entityManager->persist($user);
+                $entityManager->flush();
+                $logger->info('Utilisateur persisté en base de données');
 
-            return $userAuthenticator->authenticateUser(
-                $user,
-                $authenticator,
-                $request
-            );
+                $activationUrl = $this->generateUrl('app_verify_email', [
+                    'token' => $user->getActivationToken()
+                ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+                $logger->info('Tentative d\'envoi d\'email', [
+                    'to' => $user->getEmail(),
+                    'activation_url' => $activationUrl
+                ]);
+
+                // Envoi de l'email
+                $emailService->sendActivationEmail($user, $activationUrl);
+                $logger->info('Email envoyé avec succès');
+
+                $this->addFlash('success', 'Votre compte a été créé. Veuillez vérifier vos emails pour l\'activer.');
+                return $this->redirectToRoute('app_login');
+
+            } catch (\Exception $e) {
+                $logger->error('Erreur pendant l\'inscription', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                $this->addFlash('error', 'Une erreur est survenue lors de l\'inscription : ' . $e->getMessage());
+                return $this->redirectToRoute('app_register');
+            }
         }
 
         return $this->render('registration/register.html.twig', [

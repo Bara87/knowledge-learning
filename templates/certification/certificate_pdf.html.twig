@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Certificat de réussite</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(45deg, var(--color-light) 25%, transparent 25%);
+        }
+        .certificate {
+            border: 2px solid var(--color-primary);
+            background-color: white;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 36px;
+            color: var(--color-dark);
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: var(--color-neutral);
+            margin-bottom: 40px;
+        }
+        .name {
+            font-size: 28px;
+            color: var(--color-dark);
+            margin: 20px 0;
+        }
+        .description {
+            font-size: 18px;
+            color: var(--color-neutral);
+            margin: 20px 0;
+        }
+        .date {
+            font-size: 16px;
+            color: var(--color-neutral);
+            margin-top: 40px;
+        }
+        .signature {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <img src="{{ absolute_url(asset('images/logo.png')) }}" alt="Logo" class="logo">
+        
+        <h1 class="title">Certificat de réussite</h1>
+        <div class="subtitle">Knowledge Learning</div>
+
+        <p class="description">Ce certificat atteste que</p>
+        <div class="name">{{ user.email }}</div>
+        <p class="description">
+            a complété avec succès le thème<br>
+            <strong>{{ theme.name }}</strong>
+        </p>
+
+        <div class="date">
+            Délivré le {{ date|date('d/m/Y') }}
+        </div>
+
+        <div class="signature">
+            <img src="{{ absolute_url(asset('images/signature.png')) }}" alt="Signature">
+            <p>Directeur de Knowledge Learning</p>
+        </div>
+    </div>
+</body>
+</html>

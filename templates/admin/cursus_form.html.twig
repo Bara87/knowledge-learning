@@ -8,13 +8,21 @@
 
     {{ form_start(form, {'attr': {'class': 'mt-4'}}) }}
         <div class="mb-3">
-            {{ form_row(form.title) }}
+            {{ form_label(form.title) }}
+            {{ form_widget(form.title) }}
+            {{ form_errors(form.title) }}
         </div>
+        {% if form.description is defined %}
         <div class="mb-3">
-            {{ form_row(form.description) }}
+            {{ form_label(form.description) }}
+            {{ form_widget(form.description) }}
+            {{ form_errors(form.description) }}
         </div>
+        {% endif %}
         <div class="mb-3">
-            {{ form_row(form.theme) }}
+            {{ form_label(form.theme) }}
+            {{ form_widget(form.theme) }}
+            {{ form_errors(form.theme) }}
         </div>
         <button type="submit" class="btn btn-primary">{{ cursus.id ? 'Modifier' : 'Créer' }}</button>
         <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>

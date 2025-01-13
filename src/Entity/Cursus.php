@@ -35,11 +35,17 @@ class Cursus
     #[ORM\Column]
     private ?\DateTime $updatedAt = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $level = null;
+
     #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Lesson::class)]
     private Collection $lessons;
 
     #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Purchase::class)]
     private Collection $purchases;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $thumbnail = null;
 
     public function __construct()
     {
@@ -120,6 +126,17 @@ class Cursus
         return $this;
     }
 
+    public function getLevel(): ?string
+    {
+        return $this->level;
+    }
+
+    public function setLevel(string $level): self
+    {
+        $this->level = $level;
+        return $this;
+    }
+
     /**
      * @return Collection<int, Lesson>
      */
@@ -146,7 +163,22 @@ class Cursus
         }
         return $this;
     }
+        
 
+    public function getValidatedLessonsCount(?User $user): int
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($this->lessons as $lesson) {
+            if ($lesson->isValidatedByUser($user)) {
+                $count++;
+            }
+        }
+        return $count;
+    }
     /**
      * @return Collection<int, Purchase>
      */
@@ -174,9 +206,56 @@ class Cursus
         return $this;
     }
 
+        /**
+     * Calcule la durée totale du cursus en minutes
+     */
+    public function getTotalDuration(): int
+    {
+        $total = 0;
+        foreach ($this->lessons as $lesson) {
+            $total += $lesson->getDuration() ?? 0;
+        }
+        return $total;
+    }
+
     #[ORM\PreUpdate]
     public function updateTimestamp(): void
     {
         $this->updatedAt = new \DateTime();
+    }
+
+    public function getThumbnail(): ?string
+    {
+        return $this->thumbnail;
+    }
+
+    public function setThumbnail(?string $thumbnail): static
+    {
+        $this->thumbnail = $thumbnail;
+        return $this;
+    }
+
+        /**
+     * Calcule le pourcentage de progression d'un utilisateur dans ce cursus
+     */
+    public function getProgressForUser(?User $user): float
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        $totalLessons = $this->lessons->count();
+        if ($totalLessons === 0) {
+            return 0;
+        }
+
+        $validatedLessons = 0;
+        foreach ($this->lessons as $lesson) {
+            if ($lesson->isValidatedByUser($user)) {
+                $validatedLessons++;
+            }
+        }
+
+        return round(($validatedLessons / $totalLessons) * 100);
     }
 }

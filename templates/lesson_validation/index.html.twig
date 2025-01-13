@@ -2,6 +2,23 @@
 
 {% block title %}Mes validations de leçons{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .alert-info {
+            background-color: var(--color-light);
+            border-color: var(--color-primary);
+            color: var(--color-dark);
+        }
+        .list-group-item {
+            border-color: var(--color-light);
+        }
+        .text-muted {
+            color: var(--color-neutral) !important;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
     <div class="container mt-4">
         <h1>Mes validations de leçons</h1>

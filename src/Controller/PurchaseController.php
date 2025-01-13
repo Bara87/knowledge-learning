@@ -13,13 +13,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Psr\Log\LoggerInterface;
 
 #[Route('/purchase')]
 class PurchaseController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private StripeService $stripeService
+        private StripeService $stripeService,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -54,7 +56,7 @@ class PurchaseController extends AbstractController
                     ->setCursus($cursus)
                     ->setAmount($cursus->getPrice())
                     ->setStatus('pending')
-                    ->setStripeSessionId($session->id)
+                    ->setStripeSessionId($session->payment_intent ?? $session->id)
                     ->setCreatedAt(new DateTimeImmutable());
 
             $this->entityManager->persist($purchase);
@@ -128,7 +130,73 @@ class PurchaseController extends AbstractController
     #[Route('/webhook', name: 'app_purchase_webhook', methods: ['POST'])]
     public function webhook(Request $request): Response
     {
-        return $this->stripeService->handleWebhook($request);
+        try {
+            $event = \Stripe\Webhook::constructEvent(
+                $request->getContent(),
+                $request->headers->get('stripe-signature'),
+                $_ENV['STRIPE_WEBHOOK_SECRET']
+            );
+
+            $this->logger->info('Webhook reçu', [
+                'type' => $event->type,
+                'data' => json_encode($event->data)
+            ]);
+
+            // Ne traiter que l'événement checkout.session.completed
+            if ($event->type === 'checkout.session.completed') {
+                $session = $event->data->object;
+
+                // Rechercher l'achat uniquement par session ID
+                $purchase = $this->entityManager->getRepository(Purchase::class)
+                    ->findOneBy(['stripeSessionId' => $session->id]);
+
+                if ($purchase) {
+                    $purchase->setStatus('completed')
+                            ->setUpdatedAt(new DateTimeImmutable());
+                    
+                    $this->entityManager->flush();
+
+                    $this->logger->info('Achat mis à jour', [
+                        'purchase_id' => $purchase->getId(),
+                        'old_status' => $purchase->getStatus()
+                    ]);
+                } else {
+                    $this->logger->error('Achat non trouvé', [
+                        'session_id' => $session->id
+                    ]);
+                }
+            }
+
+            return new Response('Webhook handled', Response::HTTP_OK);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur webhook', [
+                'error' => $e->getMessage()
+            ]);
+            return new Response('Error: ' . $e->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    private function handlePaymentIntent($paymentIntent): void
+    {
+        $this->logger->info('Traitement payment intent', [
+            'id' => $paymentIntent->id,
+            'status' => $paymentIntent->status
+        ]);
+
+        $purchase = $this->entityManager->getRepository(Purchase::class)
+            ->findOneBy(['stripeSessionId' => $paymentIntent->id]);
+
+        if ($purchase && $paymentIntent->status === 'succeeded') {
+            $purchase->setStatus('completed')
+                    ->setUpdatedAt(new DateTimeImmutable());
+            
+            $this->entityManager->flush();
+
+            $this->logger->info('Purchase mis à jour via payment intent', [
+                'id' => $purchase->getId(),
+                'new_status' => $purchase->getStatus()
+            ]);
+        }
     }
 
     #[Route('/success', name: 'app_purchase_success')]
@@ -147,5 +215,47 @@ class PurchaseController extends AbstractController
         return $this->redirectToRoute('app_home');
     }
 
-    
+    private function handleCheckoutSession($session): void
+    {
+        $this->logger->info('Traitement session checkout', [
+            'session_id' => $session->id,
+            'payment_intent' => $session->payment_intent,
+            'payment_status' => $session->payment_status
+        ]);
+
+        // Rechercher d'abord par session_id
+        $purchase = $this->entityManager->getRepository(Purchase::class)
+            ->findOneBy(['stripeSessionId' => $session->id]);
+
+        if (!$purchase) {
+            // Si non trouvé, chercher par payment_intent
+            $purchase = $this->entityManager->getRepository(Purchase::class)
+                ->findOneBy(['stripeSessionId' => $session->payment_intent]);
+        }
+
+        if ($purchase) {
+            $this->logger->info('Purchase trouvé', [
+                'id' => $purchase->getId(),
+                'old_status' => $purchase->getStatus(),
+                'stripe_session_id' => $purchase->getStripeSessionId()
+            ]);
+
+            if ($session->payment_status === 'paid') {
+                $purchase->setStatus('completed')
+                        ->setUpdatedAt(new DateTimeImmutable());
+                
+                $this->entityManager->flush();
+
+                $this->logger->info('Purchase mis à jour', [
+                    'id' => $purchase->getId(),
+                    'new_status' => $purchase->getStatus()
+                ]);
+            }
+        } else {
+            $this->logger->error('Purchase non trouvé', [
+                'session_id' => $session->id,
+                'payment_intent' => $session->payment_intent
+            ]);
+        }
+    }
 }

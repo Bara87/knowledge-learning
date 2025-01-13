@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card {
+            border-color: var(--color-light);
+        }
+        .card-body {
+            background-color: var(--color-light);
+        }
+        .text-muted {
+            color: var(--color-neutral) !important;
+        }
+        .alert-info {
+            background-color: var(--color-light);
+            border-color: var(--color-primary);
+            color: var(--color-dark);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        {# Bouton retour #}
+        <div class="mb-4">
+            {% if lesson.cursus %}
+                <a href="{{ path('app_cursus_show', {'id': lesson.cursus.id}) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour au cursus
+                </a>
+            {% else %}
+                <a href="{{ path('app_home') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                </a>
+            {% endif %}
+        </div>
+
+        <h1>{{ lesson.title }}</h1>
+        
+        {# Aperçu de la leçon #}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Description</h5>
+                <p class="card-text"><strong>Prix : </strong>{{ lesson.price }}€</p>
+            </div>
+        </div>
+
+        {% if needsPurchase %}
+            <div class="alert alert-info">
+                Vous devez acheter cette leçon pour y accéder.
+                <div class="mt-3">
+                    <a href="{{ path('app_purchase_lesson', {'id': lesson.id}) }}" 
+                       class="btn btn-primary">
+                        Acheter cette leçon pour {{ lesson.price }}€
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
