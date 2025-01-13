@@ -17,15 +17,19 @@ class EmailService
 
     public function sendActivationEmail(User $user, string $activationUrl): void
     {
-        $email = (new Email())
-            ->from($this->adminEmail)
-            ->to($user->getEmail())
-            ->subject('Activation de votre compte')
-            ->html($this->twig->render('service/activation.html.twig', [
-                'user' => $user,
-                'activation_url' => $activationUrl
-            ]));
+        try {
+            $email = (new Email())
+                ->from($this->adminEmail)
+                ->to($user->getEmail())
+                ->subject('Activation de votre compte')
+                ->html($this->twig->render('service/activation.html.twig', [
+                    'user' => $user,
+                    'activation_url' => $activationUrl
+                ]));
 
-        $this->mailer->send($email);
+            $this->mailer->send($email);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Erreur lors de l\'envoi de l\'email : ' . $e->getMessage());
+        }
     }
 }

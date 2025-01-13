@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Lesson
 {
     #[ORM\Id]
@@ -37,6 +38,9 @@ class Lesson
 
     #[ORM\Column]
     private ?\DateTime $updatedAt = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $duration = null;
 
     #[ORM\OneToMany(mappedBy: 'lesson', targetEntity: LessonValidation::class)]
     private Collection $validations;
@@ -134,6 +138,17 @@ class Lesson
         return $this;
     }
 
+    public function getDuration(): ?int
+    {
+        return $this->duration;
+    }
+
+    public function setDuration(?int $duration): static
+    {
+        $this->duration = $duration;
+        return $this;
+    }
+
     /**
      * @return Collection<int, LessonValidation>
      */
@@ -188,9 +203,96 @@ class Lesson
         return $this;
     }
 
+    /**
+     * Vérifie si la leçon a été validée par l'utilisateur donné
+     */
+    public function isValidatedByUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        foreach ($this->validations as $validation) {
+            if ($validation->getUser() === $user && $validation->isValidated()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Récupère la date de validation pour un utilisateur
+     */
+    public function getValidationDate(?User $user): ?\DateTimeInterface
+    {
+        if (!$user) {
+            return null;
+        }
+
+        foreach ($this->validations as $validation) {
+            if ($validation->getUser() === $user && $validation->isValidated()) {
+                return $validation->getCreatedAt();
+            }
+        }
+        return null;
+    }
+
     #[ORM\PreUpdate]
     public function updateTimestamp(): void
     {
         $this->updatedAt = new \DateTime();
+    }
+
+    /**
+     * Récupère la leçon précédente dans le même cursus
+     */
+    public function getPrevious(): ?self
+    {
+        if (!$this->cursus) {
+            return null;
+        }
+
+        $lessons = $this->cursus->getLessons()->toArray();
+        $currentIndex = array_search($this, $lessons);
+        
+        if ($currentIndex === false || $currentIndex === 0) {
+            return null;
+        }
+
+        return $lessons[$currentIndex - 1];
+    }
+
+    /**
+     * Récupère la leçon suivante dans le même cursus
+     */
+    public function getNext(): ?self
+    {
+        if (!$this->cursus) {
+            return null;
+        }
+
+        $lessons = $this->cursus->getLessons()->toArray();
+        $currentIndex = array_search($this, $lessons);
+        
+        if ($currentIndex === false || $currentIndex === count($lessons) - 1) {
+            return null;
+        }
+
+        return $lessons[$currentIndex + 1];
+    }
+
+    public function getYoutubeEmbedUrl(): ?string
+    {
+        if (!$this->videoUrl) {
+            return null;
+        }
+
+        // Extrait l'ID YouTube de différents formats d'URL
+        $pattern = '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/';
+        if (preg_match($pattern, $this->videoUrl, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1];
+        }
+
+        return null;
     }
 }

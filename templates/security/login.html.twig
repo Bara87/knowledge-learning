@@ -20,3 +20,21 @@
     <button type="submit">Se connecter</button>
 </form>
 {% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 116, 199, 0.25);
+        }
+        button[type="submit"] {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+        button[type="submit"]:hover {
+            background-color: var(--color-dark);
+            border-color: var(--color-dark);
+        }
+    </style>
+{% endblock %}

@@ -55,7 +55,7 @@
                                  alt="{{ cursus.name }}">
                         {% endif %}
                         <div class="card-body">
-                            <h3 class="card-title">{{ cursus.name }}</h3>
+                            <h3 class="card-title">{{ cursus.title }}</h3>
                             <p class="card-text">{{ cursus.description }}</p>
                             <div class="cursus-meta">
                                 <div class="price">{{ cursus.price }}€</div>
@@ -107,7 +107,7 @@
     {{ parent() }}
     <style>
         .certification-badge {
-            background: #f8f9fa;
+            background: var(--color-light);
             padding: 1rem;
             border-radius: 8px;
             margin: 1rem 0;
@@ -131,7 +131,7 @@
         .price {
             font-size: 1.25rem;
             font-weight: bold;
-            color: #0d6efd;
+            color: var(--color-primary);
         }
         .progress {
             height: 0.5rem;

@@ -1,20 +1,104 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello PurchaseController!{% endblock %}
+{% block title %}Paiement - Knowledge Learning{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title mb-0">Récapitulatif de votre achat</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if cursus is defined %}
+                            <h3>{{ cursus.title }}</h3>
+                            <p class="lead">Cursus complet</p>
+                            <p>{{ cursus.description|raw|striptags|slice(0, 150)|trim }}...</p>
+                            <div class="price-tag mb-4">
+                                Prix : {{ cursus.price }}€
+                            </div>
+                        {% endif %}
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+                        {% if lesson is defined %}
+                            <h3>{{ lesson.title }}</h3>
+                            <p class="lead">Leçon individuelle</p>
+                            <p>{{ lesson.content|raw|striptags|slice(0, 150)|trim }}...</p>
+                            <div class="price-tag mb-4">
+                                Prix : {{ lesson.price }}€
+                            </div>
+                        {% endif %}
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/Users/baradia/knowledge-learning/src/Controller/PurchaseController.php</code></li>
-        <li>Your template at <code>/Users/baradia/knowledge-learning/templates/purchase/index.html.twig</code></li>
-    </ul>
-</div>
+                        <form method="POST" id="payment-form">
+                            <div class="form-group mb-4">
+                                <label for="card-element">Carte bancaire</label>
+                                <div id="card-element" class="form-control">
+                                    <!-- Un élément Stripe sera inséré ici -->
+                                </div>
+                                <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                Payer maintenant
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{ path('app_home') }}" class="btn btn-link">
+                        <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card {
+            border-color: var(--color-light);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: var(--color-light);
+            border-bottom: 1px solid var(--color-light);
+        }
+        .price-tag {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+        #card-element {
+            padding: 1rem;
+            border: 1px solid var(--color-light);
+        }
+        #card-element:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 116, 199, 0.25);
+        }
+        .text-danger {
+            color: var(--color-accent-red) !important;
+        }
+        .btn-link {
+            color: var(--color-primary);
+        }
+        .btn-link:hover {
+            color: var(--color-dark);
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        // Initialisation de Stripe et gestion du paiement
+        const stripe = Stripe('votre_cle_publique_stripe');
+        const elements = stripe.elements();
+        const card = elements.create('card');
+        card.mount('#card-element');
+    </script>
 {% endblock %}

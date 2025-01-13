@@ -161,6 +161,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function hasPurchasedCursus(Cursus $cursus): bool
+    {
+        foreach ($this->purchases as $purchase) {
+            if ($purchase->getCursus() === $cursus) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * @return Collection<int, LessonValidation>
      */
@@ -242,5 +251,71 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+
+    /**
+     * Vérifie si l'utilisateur a complété un thème
+     */
+    public function hasCompletedTheme(Theme $theme): bool
+    {
+        $totalLessons = 0;
+        $validatedLessons = 0;
+
+        foreach ($theme->getCursus() as $cursus) {
+            foreach ($cursus->getLessons() as $lesson) {
+                $totalLessons++;
+                if ($lesson->isValidatedByUser($this)) {
+                    $validatedLessons++;
+                }
+            }
+        }
+
+        return $totalLessons > 0 && $validatedLessons === $totalLessons;
+    }
+
+
+    /**
+     * Calcule le pourcentage de progression sur un thème
+     */
+    public function getThemeProgress(Theme $theme): float
+    {
+        $totalLessons = 0;
+        $validatedLessons = 0;
+
+        foreach ($theme->getCursus() as $cursus) {
+            foreach ($cursus->getLessons() as $lesson) {
+                $totalLessons++;
+                if ($lesson->isValidatedByUser($this)) {
+                    $validatedLessons++;
+                }
+            }
+        }
+
+        if ($totalLessons === 0) {
+            return 0;
+        }
+
+        return round(($validatedLessons / $totalLessons) * 100);
+    }
+
+    /**
+     * Calcule le pourcentage de progression sur un cursus
+     */
+    public function getCursusProgress(Cursus $cursus): float
+    {
+        $totalLessons = $cursus->getLessons()->count();
+        if ($totalLessons === 0) {
+            return 0;
+        }
+
+        $validatedLessons = 0;
+        foreach ($cursus->getLessons() as $lesson) {
+            if ($lesson->isValidatedByUser($this)) {
+                $validatedLessons++;
+            }
+        }
+
+        return round(($validatedLessons / $totalLessons) * 100);
     }
 }

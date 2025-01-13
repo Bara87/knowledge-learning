@@ -42,9 +42,10 @@ class CourseController extends AbstractController
                 return $this->redirectToRoute('app_login');
             }
             
-            $this->addFlash('info', 'Vous devez acheter ce cursus pour y accéder.');
-            return $this->redirectToRoute('app_purchase_cursus', [
-                'id' => $cursus->getId()
+            // Au lieu de rediriger, on affiche la page avec un message d'achat
+            return $this->render('course/cursus_preview.html.twig', [
+                'cursus' => $cursus,
+                'needsPurchase' => true
             ]);
         }
 
@@ -70,9 +71,10 @@ class CourseController extends AbstractController
                 ]);
             }
             
-            $this->addFlash('info', 'Vous devez acheter cette leçon pour y accéder.');
-            return $this->redirectToRoute('app_purchase_lesson', [
-                'id' => $lesson->getId()
+            // Au lieu de rediriger, on affiche la page avec un message d'achat
+            return $this->render('course/lesson_preview.html.twig', [
+                'lesson' => $lesson,
+                'needsPurchase' => true
             ]);
         }
 

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Purchase;
 use App\Entity\LessonValidation;
+use App\Entity\Certification;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,7 +39,7 @@ class ProfileController extends AbstractController
             ->findBy(['user' => $user]);
 
         // Récupérer les certifications
-        $certifications = $this->entityManager->getRepository('App:Certification')
+        $certifications = $this->entityManager->getRepository(Certification::class)
             ->findBy(['user' => $user]);
 
         return $this->render('profile/index.html.twig', [
