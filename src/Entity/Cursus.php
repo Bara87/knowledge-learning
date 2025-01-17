@@ -8,6 +8,15 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * Entité représentant un cursus de formation
+ * 
+ * Cette entité gère :
+ * - Les informations de base du cursus (titre, description, prix)
+ * - Les leçons associées au cursus
+ * - Les achats effectués pour ce cursus
+ * - Le suivi de la progression des utilisateurs
+ */
 #[ORM\Entity(repositoryClass: CursusRepository::class)]
 class Cursus
 {
@@ -16,37 +25,76 @@ class Cursus
     #[ORM\Column]
     private ?int $id = null;
 
+    /**
+     * Titre du cursus
+     */
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
+    /**
+     * Description détaillée du cursus
+     */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    /**
+     * Prix du cursus
+     */
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $price = null;
 
+    /**
+     * Thème auquel appartient le cursus
+     */
     #[ORM\ManyToOne(inversedBy: 'cursus')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Theme $theme = null;
 
+    /**
+     * Date de création du cursus
+     */
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    /**
+     * Date de dernière modification du cursus
+     */
     #[ORM\Column]
     private ?\DateTime $updatedAt = null;
 
+    /**
+     * Niveau de difficulté du cursus
+     */
     #[ORM\Column(length: 20)]
     private ?string $level = null;
 
+    /**
+     * Liste des leçons du cursus
+     * 
+     * @var Collection<int, Lesson>
+     */
     #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Lesson::class)]
     private Collection $lessons;
 
+    /**
+     * Liste des achats effectués pour ce cursus
+     * 
+     * @var Collection<int, Purchase>
+     */
     #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Purchase::class)]
     private Collection $purchases;
 
+    /**
+     * Image miniature du cursus
+     */
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $thumbnail = null;
 
+    /**
+     * Constructeur
+     * 
+     * Initialise les collections et définit les dates de création/modification
+     */
     public function __construct()
     {
         $this->lessons = new ArrayCollection();
@@ -165,6 +213,12 @@ class Cursus
     }
         
 
+    /**
+     * Compte le nombre de leçons validées par un utilisateur
+     * 
+     * @param User|null $user Utilisateur dont on veut compter les validations
+     * @return int Nombre de leçons validées
+     */
     public function getValidatedLessonsCount(?User $user): int
     {
         if (!$user) {
@@ -208,6 +262,8 @@ class Cursus
 
         /**
      * Calcule la durée totale du cursus en minutes
+     * 
+     * @return int Durée totale en minutes
      */
     public function getTotalDuration(): int
     {
@@ -218,6 +274,11 @@ class Cursus
         return $total;
     }
 
+    /**
+     * Met à jour la date de modification
+     * 
+     * Cette méthode est appelée automatiquement avant chaque mise à jour
+     */
     #[ORM\PreUpdate]
     public function updateTimestamp(): void
     {
@@ -237,6 +298,9 @@ class Cursus
 
         /**
      * Calcule le pourcentage de progression d'un utilisateur dans ce cursus
+     * 
+     * @param User|null $user Utilisateur dont on veut calculer la progression
+     * @return float Pourcentage de progression (0-100)
      */
     public function getProgressForUser(?User $user): float
     {

@@ -18,6 +18,10 @@
     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
     <button type="submit">Se connecter</button>
+
+    <div class="forgot-password">
+        <a href="{{ path('app_forgot_password') }}">Mot de passe oublié ?</a>
+    </div>
 </form>
 {% endblock %}
 
@@ -35,6 +39,17 @@
         button[type="submit"]:hover {
             background-color: var(--color-dark);
             border-color: var(--color-dark);
+        }
+        .forgot-password {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .forgot-password a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+        .forgot-password a:hover {
+            text-decoration: underline;
         }
     </style>
 {% endblock %}

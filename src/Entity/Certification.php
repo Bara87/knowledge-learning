@@ -6,6 +6,14 @@ use App\Repository\CertificationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * Entité représentant une certification obtenue par un utilisateur
+ * 
+ * Cette entité gère :
+ * - Le lien entre un utilisateur et un thème certifié
+ * - Les dates d'obtention et de création de la certification
+ * - Le suivi des certifications par utilisateur et par thème
+ */
 #[ORM\Entity(repositoryClass: CertificationRepository::class)]
 class Certification
 {
@@ -14,19 +22,44 @@ class Certification
     #[ORM\Column]
     private ?int $id = null;
 
+    /**
+     * Utilisateur ayant obtenu la certification
+     */
     #[ORM\ManyToOne(inversedBy: 'certifications')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    /**
+     * Thème pour lequel la certification est délivrée
+     */
     #[ORM\ManyToOne(inversedBy: 'certifications')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Theme $theme = null;
 
+    /**
+     * Date d'obtention de la certification
+     * 
+     * Cette date peut différer de la date de création, par exemple
+     * dans le cas d'une certification antidatée ou programmée
+     */
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $obtainedAt = null;
 
+    /**
+     * Date de création de l'enregistrement dans le système
+     */
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
+
+    /**
+     * Constructeur
+     * 
+     * Note: Le constructeur n'initialise pas les dates automatiquement
+     * car elles doivent être définies explicitement lors de la création
+     */
+    public function __construct()
+    {
+    }
 
     public function getId(): ?int
     {

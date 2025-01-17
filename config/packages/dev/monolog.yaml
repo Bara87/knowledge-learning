@@ -1,0 +1,15 @@
+monolog:
+    channels: ['mailer']
+    handlers:
+        main:
+            type: stream
+            path: "%kernel.logs_dir%/%kernel.environment%.log"
+            level: debug
+            channels: ["!event", "!doctrine"]
+        # autres handlers...
+        mailer:
+            type: stream
+            path: "%kernel.logs_dir%/mailer.log"
+            level: debug
+            channels: ["mailer"]
+            formatter: monolog.formatter.line 

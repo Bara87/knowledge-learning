@@ -11,8 +11,23 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * Contrôleur de gestion des cours
+ * 
+ * Ce contrôleur gère :
+ * - L'affichage des thèmes
+ * - L'affichage des cursus
+ * - L'affichage des leçons
+ * - La gestion des accès aux contenus
+ */
 class CourseController extends AbstractController
 {
+    /**
+     * Affiche la page d'accueil des cours
+     * 
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @return Response Vue de la liste des thèmes
+     */
     #[Route('/', name: 'app_home')]
     public function index(EntityManagerInterface $entityManager): Response
     {
@@ -23,6 +38,14 @@ class CourseController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche le détail d'un thème
+     * 
+     * Les thèmes sont toujours accessibles sans restriction
+     * 
+     * @param Theme $theme Thème à afficher
+     * @return Response Vue du détail du thème
+     */
     #[Route('/theme/{id}', name: 'app_theme_show')]
     public function showTheme(Theme $theme): Response
     {
@@ -32,6 +55,17 @@ class CourseController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche le détail d'un cursus
+     * 
+     * Vérifie les droits d'accès et :
+     * - Redirige vers la connexion si non connecté
+     * - Affiche une prévisualisation si non acheté
+     * - Affiche le contenu complet si accès autorisé
+     * 
+     * @param Cursus $cursus Cursus à afficher
+     * @return Response Vue du cursus ou redirection
+     */
     #[Route('/cursus/{id}', name: 'app_cursus_show')]
     public function showCursus(Cursus $cursus): Response
     {
@@ -54,6 +88,17 @@ class CourseController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche le détail d'une leçon
+     * 
+     * Vérifie les droits d'accès et :
+     * - Redirige vers la connexion si non connecté
+     * - Affiche une prévisualisation si non achetée
+     * - Affiche le contenu si la leçon ou le cursus parent est acheté
+     * 
+     * @param Lesson $lesson Leçon à afficher
+     * @return Response Vue de la leçon ou redirection
+     */
     #[Route('/lesson/{id}', name: 'app_lesson_show')]
     public function showLesson(Lesson $lesson): Response
     {
@@ -83,6 +128,17 @@ class CourseController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche la liste des leçons d'un cursus
+     * 
+     * Vérifie les droits d'accès et :
+     * - Redirige vers la connexion si non connecté
+     * - Redirige vers l'achat si cursus non acheté
+     * - Affiche la liste complète si accès autorisé
+     * 
+     * @param Cursus $cursus Cursus dont on veut voir les leçons
+     * @return Response Vue de la liste des leçons ou redirection
+     */
     #[Route('/cursus/{id}/lessons', name: 'app_cursus_lessons')]
     public function cursusLessons(Cursus $cursus): Response
     {
@@ -103,6 +159,4 @@ class CourseController extends AbstractController
             'lessons' => $cursus->getLessons()
         ]);
     }
-
-   
 }

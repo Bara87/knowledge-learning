@@ -8,6 +8,15 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * Entité représentant une leçon dans un cursus
+ * 
+ * Cette entité gère :
+ * - Les informations de base de la leçon (titre, contenu, vidéo)
+ * - Les validations par les utilisateurs
+ * - Les achats individuels de leçons
+ * - La navigation entre les leçons d'un cursus
+ */
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 class Lesson
@@ -17,37 +26,76 @@ class Lesson
     #[ORM\Column]
     private ?int $id = null;
 
+    /**
+     * Titre de la leçon
+     */
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
+    /**
+     * Contenu textuel de la leçon
+     */
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
+    /**
+     * URL de la vidéo associée
+     */
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $videoUrl = null;
 
+    /**
+     * Prix de la leçon (si achat individuel)
+     */
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $price = null;
 
+    /**
+     * Cursus auquel appartient la leçon
+     */
     #[ORM\ManyToOne(inversedBy: 'lessons')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Cursus $cursus = null;
 
+    /**
+     * Date de création de la leçon
+     */
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    /**
+     * Date de dernière modification de la leçon
+     */
     #[ORM\Column]
     private ?\DateTime $updatedAt = null;
 
+    /**
+     * Durée estimée de la leçon en minutes
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $duration = null;
 
+    /**
+     * Liste des validations de la leçon par les utilisateurs
+     * 
+     * @var Collection<int, LessonValidation>
+     */
     #[ORM\OneToMany(mappedBy: 'lesson', targetEntity: LessonValidation::class)]
     private Collection $validations;
 
+    /**
+     * Liste des achats individuels de la leçon
+     * 
+     * @var Collection<int, Purchase>
+     */
     #[ORM\OneToMany(mappedBy: 'lesson', targetEntity: Purchase::class)]
     private Collection $purchases;
 
+    /**
+     * Constructeur
+     * 
+     * Initialise les collections et définit les dates de création/modification
+     */
     public function __construct()
     {
         $this->validations = new ArrayCollection();
@@ -205,6 +253,9 @@ class Lesson
 
     /**
      * Vérifie si la leçon a été validée par l'utilisateur donné
+     * 
+     * @param User|null $user Utilisateur à vérifier
+     * @return bool True si la leçon est validée par l'utilisateur
      */
     public function isValidatedByUser(?User $user): bool
     {
@@ -222,6 +273,9 @@ class Lesson
 
     /**
      * Récupère la date de validation pour un utilisateur
+     * 
+     * @param User|null $user Utilisateur concerné
+     * @return \DateTimeInterface|null Date de validation ou null si non validée
      */
     public function getValidationDate(?User $user): ?\DateTimeInterface
     {
@@ -237,6 +291,11 @@ class Lesson
         return null;
     }
 
+    /**
+     * Met à jour la date de modification
+     * 
+     * Cette méthode est appelée automatiquement avant chaque mise à jour
+     */
     #[ORM\PreUpdate]
     public function updateTimestamp(): void
     {
@@ -245,6 +304,8 @@ class Lesson
 
     /**
      * Récupère la leçon précédente dans le même cursus
+     * 
+     * @return self|null Leçon précédente ou null si première leçon
      */
     public function getPrevious(): ?self
     {
@@ -264,6 +325,8 @@ class Lesson
 
     /**
      * Récupère la leçon suivante dans le même cursus
+     * 
+     * @return self|null Leçon suivante ou null si dernière leçon
      */
     public function getNext(): ?self
     {
@@ -281,6 +344,11 @@ class Lesson
         return $lessons[$currentIndex + 1];
     }
 
+    /**
+     * Génère l'URL d'intégration YouTube à partir de l'URL de la vidéo
+     * 
+     * @return string|null URL d'intégration ou null si pas de vidéo
+     */
     public function getYoutubeEmbedUrl(): ?string
     {
         if (!$this->videoUrl) {

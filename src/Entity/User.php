@@ -10,6 +10,15 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+/**
+ * Entité représentant un utilisateur du système
+ * 
+ * Cette entité gère :
+ * - Les informations d'authentification (email, mot de passe, rôles)
+ * - L'activation du compte et la vérification de l'email
+ * - Les achats, validations de leçons et certifications
+ * - Le suivi de la progression dans les cours
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -19,35 +28,81 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
+    /**
+     * Email de l'utilisateur (identifiant unique)
+     */
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    /**
+     * Rôles de l'utilisateur (ROLE_USER par défaut)
+     */
     #[ORM\Column]
     private array $roles = [];
 
+    /**
+     * Mot de passe hashé de l'utilisateur
+     */
     #[ORM\Column]
     private ?string $password = null;
 
+    /**
+     * État d'activation du compte
+     */
     #[ORM\Column(type: 'boolean')]
     private bool $isActive = false;
 
+    /**
+     * Token pour l'activation du compte
+     */
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $activationToken = null;
 
+    /**
+     * Date d'expiration du token d'activation
+     */
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTime $tokenExpiresAt = null;
 
+    /**
+     * Liste des achats de l'utilisateur
+     * 
+     * @var Collection<int, Purchase>
+     */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Purchase::class)]
     private Collection $purchases;
 
+    /**
+     * Liste des leçons validées par l'utilisateur
+     * 
+     * @var Collection<int, LessonValidation>
+     */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: LessonValidation::class)]
     private Collection $lessonValidations;
 
+    /**
+     * Liste des certifications obtenues par l'utilisateur
+     * 
+     * @var Collection<int, Certification>
+     */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Certification::class)]
     private Collection $certifications;
 
+    /**
+     * État de vérification de l'email
+     */
     #[ORM\Column]
     private bool $isVerified = false;
+
+    /**
+     * Token pour la réinitialisation du mot de passe
+     */
+    private ?string $resetToken = null;
+
+    /**
+     * Date d'expiration du token de réinitialisation
+     */
+    private ?\DateTimeImmutable $resetTokenExpiresAt = null;
 
     public function __construct()
     {
@@ -161,6 +216,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * Vérifie si l'utilisateur a acheté un cursus spécifique
+     * 
+     * @param Cursus $cursus Cursus à vérifier
+     * @return bool True si l'utilisateur a acheté le cursus
+     */
     public function hasPurchasedCursus(Cursus $cursus): bool
     {
         foreach ($this->purchases as $purchase) {
@@ -253,9 +314,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-
     /**
      * Vérifie si l'utilisateur a complété un thème
+     * 
+     * Un thème est considéré comme complété si toutes les leçons
+     * de tous les cursus du thème ont été validées
+     * 
+     * @param Theme $theme Thème à vérifier
+     * @return bool True si le thème est complété
      */
     public function hasCompletedTheme(Theme $theme): bool
     {
@@ -274,9 +340,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $totalLessons > 0 && $validatedLessons === $totalLessons;
     }
 
-
     /**
      * Calcule le pourcentage de progression sur un thème
+     * 
+     * @param Theme $theme Thème dont on veut calculer la progression
+     * @return float Pourcentage de progression (0-100)
      */
     public function getThemeProgress(Theme $theme): float
     {
@@ -301,6 +369,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Calcule le pourcentage de progression sur un cursus
+     * 
+     * @param Cursus $cursus Cursus dont on veut calculer la progression
+     * @return float Pourcentage de progression (0-100)
      */
     public function getCursusProgress(Cursus $cursus): float
     {
@@ -317,5 +388,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return round(($validatedLessons / $totalLessons) * 100);
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function setResetToken(?string $resetToken): static
+    {
+        $this->resetToken = $resetToken;
+        return $this;
+    }
+
+    public function getResetTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->resetTokenExpiresAt;
+    }
+
+    public function setResetTokenExpiresAt(?\DateTimeImmutable $resetTokenExpiresAt): static
+    {
+        $this->resetTokenExpiresAt = $resetTokenExpiresAt;
+        return $this;
     }
 }

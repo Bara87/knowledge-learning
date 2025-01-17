@@ -131,12 +131,13 @@ class PurchaseController extends AbstractController
     public function webhook(Request $request): Response
     {
         try {
+            // Vérifie l'authenticité du webhook avec la signature Stripe
             $event = \Stripe\Webhook::constructEvent(
                 $request->getContent(),
                 $request->headers->get('stripe-signature'),
                 $_ENV['STRIPE_WEBHOOK_SECRET']
             );
-
+            // Vérifie l'authenticité du webhook
             $this->logger->info('Webhook reçu', [
                 'type' => $event->type,
                 'data' => json_encode($event->data)

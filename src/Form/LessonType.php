@@ -13,8 +13,24 @@ use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Formulaire de gestion des leçons
+ * 
+ * Ce formulaire gère :
+ * - La création et modification des leçons
+ * - Le titre et le contenu de la leçon
+ * - L'URL de la vidéo associée (optionnelle)
+ * - Le prix de la leçon
+ * - L'association avec un cursus
+ */
 class LessonType extends AbstractType
 {
+    /**
+     * Construction du formulaire
+     * 
+     * @param FormBuilderInterface $builder Constructeur de formulaire
+     * @param array $options Options du formulaire
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -45,6 +61,11 @@ class LessonType extends AbstractType
         ;
     }
 
+    /**
+     * Configuration des options du formulaire
+     * 
+     * @param OptionsResolver $resolver Résolveur d'options
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

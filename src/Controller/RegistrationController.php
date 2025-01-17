@@ -18,13 +18,42 @@ use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 use Psr\Log\LoggerInterface;
 use App\Service\EmailService;
 
+/**
+ * Contrôleur gérant l'inscription des utilisateurs
+ * 
+ * Ce contrôleur gère :
+ * - L'inscription des nouveaux utilisateurs
+ * - La vérification des emails
+ * - L'attribution des rôles (ROLE_USER ou ROLE_ADMIN)
+ */
 class RegistrationController extends AbstractController
 {
+    /**
+     * Constructeur du contrôleur
+     * 
+     * @param string $adminCode Code secret pour l'inscription en tant qu'administrateur
+     */
     public function __construct(
-        private string $fromEmail,
         private string $adminCode
     ) {}
 
+    /**
+     * Gère le processus d'inscription d'un nouvel utilisateur
+     * 
+     * Cette méthode :
+     * - Crée un nouvel utilisateur
+     * - Vérifie si le code admin est correct
+     * - Hash le mot de passe
+     * - Génère un token d'activation
+     * - Envoie un email de confirmation
+     * 
+     * @param Request $request Requête HTTP
+     * @param UserPasswordHasherInterface $userPasswordHasher Service de hashage des mots de passe
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @param EmailService $emailService Service d'envoi d'emails
+     * @param LoggerInterface $logger Service de journalisation
+     * @return Response Vue du formulaire ou redirection
+     */
     #[Route('/register', name: 'app_register')]
     public function register(
         Request $request,
@@ -99,6 +128,19 @@ class RegistrationController extends AbstractController
         ]);
     }
 
+    /**
+     * Vérifie l'email d'un utilisateur via le token d'activation
+     * 
+     * Cette méthode :
+     * - Recherche l'utilisateur par son token
+     * - Active le compte
+     * - Supprime le token d'activation
+     * 
+     * @param string $token Token d'activation
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @return Response Redirection vers la page d'inscription
+     * @throws NotFoundHttpException Si aucun utilisateur n'est trouvé avec ce token
+     */
     #[Route('/verify/email/{token}', name: 'app_verify_email')]
     public function verifyUserEmail(
         string $token,

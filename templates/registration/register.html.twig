@@ -14,10 +14,13 @@
     {{ form_start(registrationForm) }}
         {{ form_row(registrationForm.email) }}
         {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
+            label: 'Mot de passe',
+            help: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
         }) }}
         {{ form_row(registrationForm.adminCode) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+        {{ form_row(registrationForm.agreeToTerms, {
+            label: 'J\'accepte les conditions d\'utilisation'
+        }) }}
 
         <button type="submit" class="btn">Register</button>
     {{ form_end(registrationForm) }}
@@ -38,6 +41,11 @@
         .btn:hover {
             background-color: var(--color-dark);
             border-color: var(--color-dark);
+        }
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
         }
     </style>
 {% endblock %}

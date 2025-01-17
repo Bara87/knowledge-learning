@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best-practices.html#use-parameters-for-application-configuration
 parameters:
+    from_email: '%env(FROM_EMAIL)%'
 
 services:
     # default configuration for services in *this* file
@@ -27,15 +28,19 @@ services:
     
     App\Controller\RegistrationController:
         arguments:
-            $fromEmail: '%env(FROM_EMAIL)%'
             $adminCode: '%env(ADMIN_CODE)%'
 
     App\Service\EmailService:
         arguments:
-            $adminEmail: '%env(FROM_EMAIL)%'
+            $adminEmail: '%from_email%'
+            $logger: '@logger'
+            $validator: '@validator'
 
     App\Service\StripeService:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
             $stripePublicKey: '%env(STRIPE_PUBLISHABLE_KEY)%'
             $webhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
+
+    Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface:
+        class: Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator

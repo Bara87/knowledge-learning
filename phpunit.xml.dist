@@ -1,38 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         backupGlobals="false"
-         colors="true"
          bootstrap="tests/bootstrap.php"
-         convertDeprecationsToExceptions="false"
->
+         colors="true">
+    
     <php>
-        <ini name="display_errors" value="1" />
-        <ini name="error_reporting" value="-1" />
-        <server name="APP_ENV" value="test" force="true" />
-        <server name="SHELL_VERBOSITY" value="-1" />
-        <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
-        <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+        <env name="APP_ENV" value="test"/>
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
+        <env name="DATABASE_URL" value="mysql://root:@127.0.0.1:3306/app_test"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
+        <env name="FRAMEWORK_MOCK_SESSION" value="true"/>
     </php>
 
     <testsuites>
-        <testsuite name="Project Test Suite">
-            <directory>tests</directory>
+        <!-- Tests des contrôleurs -->
+        <testsuite name="Controller">
+            <directory>tests/Controller</directory>
+        </testsuite>
+
+        <!-- Tests des repositories -->
+        <testsuite name="Repository">
+            <directory>tests/Repository</directory>
+        </testsuite>
+
+        <!-- Tests des services -->
+        <testsuite name="Service">
+            <directory>tests/Service</directory>
+        </testsuite>
+
+        <!-- Tests des entités -->
+        <testsuite name="Entity">
+            <directory>tests/Entity</directory>
+        </testsuite>
+
+        <!-- Tests des fixtures -->
+        <testsuite name="DataFixtures">
+            <directory>tests/DataFixtures</directory>
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="true">
+    <coverage>
         <include>
-            <directory suffix=".php">src</directory>
+            <directory>src</directory>
         </include>
+        <exclude>
+            <directory>src/DataFixtures</directory>
+        </exclude>
     </coverage>
 
     <listeners>
-        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
+        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
     </listeners>
-
-    <extensions>
-    </extensions>
 </phpunit>
