@@ -16,10 +16,29 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * Service de gestion des paiements via Stripe
+ * 
+ * Ce service gère :
+ * - La création des sessions de paiement Stripe
+ * - Le traitement des webhooks Stripe
+ * - La validation des paiements
+ * - Le suivi des transactions
+ */
 class StripeService
 {
     private string $webhookSecret;
     
+    /**
+     * Constructeur du service
+     * 
+     * @param string $stripeSecretKey Clé secrète Stripe
+     * @param string $stripePublicKey Clé publique Stripe
+     * @param string $webhookSecret Clé secrète pour les webhooks
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités
+     * @param UrlGeneratorInterface $urlGenerator Générateur d'URLs
+     * @param LoggerInterface $logger Service de journalisation
+     */
     public function __construct(
         private string $stripeSecretKey,
         private string $stripePublicKey,
@@ -32,11 +51,25 @@ class StripeService
         $this->webhookSecret = $webhookSecret;
     }
 
+    /**
+     * Récupère la clé publique Stripe
+     */
     public function getPublicKey(): string
     {
         return $this->stripePublicKey;
     }
 
+    /**
+     * Crée une session de paiement Stripe
+     * 
+     * @param string $name Nom du produit
+     * @param string $description Description du produit
+     * @param float $price Prix en euros
+     * @param User $user Utilisateur effectuant l'achat
+     * @param array $metadata Métadonnées additionnelles
+     * @return Session Session de paiement Stripe
+     * @throws \Exception Si la création de la session échoue
+     */
     private function createCheckoutSession(string $name, string $description, float $price, User $user, array $metadata): Session
     {
         try {
@@ -72,6 +105,13 @@ class StripeService
         }
     }
 
+    /**
+     * Crée une session de paiement pour un cursus
+     * 
+     * @param Cursus $cursus Cursus à acheter
+     * @param User $user Utilisateur effectuant l'achat
+     * @return Session Session de paiement Stripe
+     */
     public function createCursusCheckoutSession(Cursus $cursus, User $user): Session
     {
         $session = $this->createCheckoutSession(
@@ -95,6 +135,13 @@ class StripeService
         return $session;
     }
 
+    /**
+     * Crée une session de paiement pour une leçon
+     * 
+     * @param Lesson $lesson Leçon à acheter
+     * @param User $user Utilisateur effectuant l'achat
+     * @return Session Session de paiement Stripe
+     */
     public function createLessonCheckoutSession(Lesson $lesson, User $user): Session
     {
         $session = $this->createCheckoutSession(
@@ -118,6 +165,12 @@ class StripeService
         return $session;
     }
 
+    /**
+     * Met à jour le statut d'un achat
+     * 
+     * @param Session $session Session Stripe
+     * @param string $status Nouveau statut
+     */
     private function updatePurchaseStatus(Session $session, string $status): void
     {
         $purchase = $this->entityManager->getRepository(Purchase::class)
@@ -136,6 +189,16 @@ class StripeService
         }
     }
 
+    /**
+     * Gère les webhooks Stripe
+     * 
+     * Traite les événements suivants :
+     * - checkout.session.completed : Paiement réussi
+     * - checkout.session.expired : Session expirée
+     * 
+     * @param Request $request Requête HTTP contenant l'événement Stripe
+     * @return Response Réponse HTTP
+     */
     public function handleWebhook(Request $request): Response
     {
         try {
@@ -167,6 +230,12 @@ class StripeService
         }
     }
 
+    /**
+     * Valide un paiement via son ID de session
+     * 
+     * @param string $sessionId ID de la session Stripe
+     * @return bool True si le paiement est validé
+     */
     public function validatePurchase(string $sessionId): bool
     {
         try {

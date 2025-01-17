@@ -11,8 +11,22 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Formulaire de gestion des cursus
+ * 
+ * Ce formulaire gère :
+ * - La création et modification des cursus
+ * - Le titre et le prix du cursus
+ * - L'association avec un thème
+ */
 class CursusType extends AbstractType
 {
+    /**
+     * Construction du formulaire
+     * 
+     * @param FormBuilderInterface $builder Constructeur de formulaire
+     * @param array $options Options du formulaire
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -31,6 +45,11 @@ class CursusType extends AbstractType
         ;
     }
 
+    /**
+     * Configuration des options du formulaire
+     * 
+     * @param OptionsResolver $resolver Résolveur d'options
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

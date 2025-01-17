@@ -1,5 +1,6 @@
 framework:
     mailer:
-        dsn: '%env(MAILER_DSN)%'
+        dsn: 'smtp://smtp.gmail.com:587?encryption=tls&auth_mode=login&username=aliounedia2010@gmail.com&password=jivenqanwjxzthxz'
         envelope:
-            sender: '%env(FROM_EMAIL)%'
+            sender: 'aliounedia2010@gmail.com'
+       

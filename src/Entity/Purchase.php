@@ -6,6 +6,15 @@ use App\Repository\PurchaseRepository;
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeImmutable;
 
+/**
+ * Entité représentant un achat dans le système
+ * 
+ * Cette entité gère :
+ * - Les achats de cursus complets
+ * - Les achats de leçons individuelles
+ * - Le suivi des paiements via Stripe
+ * - L'historique des transactions
+ */
 #[ORM\Entity(repositoryClass: PurchaseRepository::class)]
 class Purchase
 {
@@ -14,31 +23,60 @@ class Purchase
     #[ORM\Column]
     private ?int $id = null;
 
+    /**
+     * Utilisateur ayant effectué l'achat
+     */
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'purchases')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    /**
+     * Cursus acheté (si achat de cursus complet)
+     */
     #[ORM\ManyToOne(targetEntity: Cursus::class, inversedBy: 'purchases')]
     private ?Cursus $cursus = null;
 
+    /**
+     * Leçon achetée (si achat individuel)
+     */
     #[ORM\ManyToOne(targetEntity: Lesson::class, inversedBy: 'purchases')]
     private ?Lesson $lesson = null;
 
+    /**
+     * Montant de l'achat
+     */
     #[ORM\Column]
     private float $amount;
 
+    /**
+     * Statut de l'achat (pending, completed, expired)
+     */
     #[ORM\Column(length: 255)]
     private string $status = 'pending';
 
+    /**
+     * Identifiant de la session Stripe
+     */
     #[ORM\Column(length: 255)]
     private string $stripeSessionId;
 
+    /**
+     * Date de création de l'achat
+     */
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
 
+    /**
+     * Date de dernière modification de l'achat
+     */
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $updatedAt = null;
 
+    /**
+     * Constructeur
+     * 
+     * Initialise la date de création
+     */
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable();
@@ -137,16 +175,31 @@ class Purchase
         return $this;
     }
 
+    /**
+     * Vérifie si l'achat est complété
+     * 
+     * @return bool True si le statut est 'completed'
+     */
     public function isCompleted(): bool
     {
         return $this->status === 'completed';
     }
 
+    /**
+     * Vérifie si l'achat est en attente
+     * 
+     * @return bool True si le statut est 'pending'
+     */
     public function isPending(): bool
     {
         return $this->status === 'pending';
     }
 
+    /**
+     * Vérifie si l'achat est expiré
+     * 
+     * @return bool True si le statut est 'expired'
+     */
     public function isExpired(): bool
     {
         return $this->status === 'expired';

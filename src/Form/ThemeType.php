@@ -9,8 +9,22 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Formulaire de gestion des thèmes
+ * 
+ * Ce formulaire gère :
+ * - La création et modification des thèmes
+ * - Le nom du thème
+ * - La description optionnelle du thème
+ */
 class ThemeType extends AbstractType
 {
+    /**
+     * Construction du formulaire
+     * 
+     * @param FormBuilderInterface $builder Constructeur de formulaire
+     * @param array $options Options du formulaire
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -26,6 +40,11 @@ class ThemeType extends AbstractType
         ;
     }
 
+    /**
+     * Configuration des options du formulaire
+     * 
+     * @param OptionsResolver $resolver Résolveur d'options
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

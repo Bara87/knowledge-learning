@@ -14,15 +14,39 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * Contrôleur de gestion des certifications
+ * 
+ * Ce contrôleur gère :
+ * - L'affichage des certifications de l'utilisateur
+ * - La création de nouvelles certifications
+ * - Le téléchargement des certificats en PDF
+ */
 #[Route('/certifications')]
 class CertificationController extends AbstractController
 {
+    /**
+     * Constructeur du contrôleur
+     * 
+     * @param CertificationRepository $certificationRepository Repository des certifications
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     */
     public function __construct(
-        
         private CertificationRepository $certificationRepository,
         private EntityManagerInterface $entityManager
     ) {}
 
+    /**
+     * Affiche la liste des certifications de l'utilisateur
+     * 
+     * Cette méthode :
+     * - Récupère tous les thèmes complétés par l'utilisateur
+     * - Crée automatiquement les certifications manquantes
+     * - Affiche la liste des certifications obtenues
+     * 
+     * @return Response Vue de la liste des certifications
+     * @throws AccessDeniedException Si l'utilisateur n'est pas connecté
+     */
     #[Route('', name: 'app_certification_index')]
     #[IsGranted('ROLE_USER')]
     public function index(): Response
@@ -63,6 +87,19 @@ class CertificationController extends AbstractController
         ]);
     }
 
+    /**
+     * Certifie un thème pour l'utilisateur connecté
+     * 
+     * Cette méthode :
+     * - Vérifie que toutes les leçons du thème sont validées
+     * - Crée une nouvelle certification
+     * - Redirige vers la liste des certifications
+     * 
+     * @param Theme $theme Thème à certifier
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités
+     * @return Response Redirection vers la liste des certifications
+     * @throws AccessDeniedException Si l'utilisateur n'est pas connecté ou n'a pas validé toutes les leçons
+     */
     #[Route('/theme/{id}/certify', name: 'app_theme_certify')]
     #[IsGranted('ROLE_USER')]
     public function certifyTheme(Theme $theme, EntityManagerInterface $entityManager): Response
@@ -87,6 +124,19 @@ class CertificationController extends AbstractController
         return $this->redirectToRoute('app_certification_index');
     }
 
+    /**
+     * Génère et télécharge le certificat en PDF
+     * 
+     * Cette méthode :
+     * - Vérifie que l'utilisateur a complété le thème
+     * - Crée ou récupère la certification
+     * - Génère le PDF du certificat
+     * - Envoie le fichier en téléchargement
+     * 
+     * @param Theme $theme Thème concerné par le certificat
+     * @return Response Fichier PDF du certificat
+     * @throws AccessDeniedException Si l'utilisateur n'a pas complété le thème
+     */
     #[Route('/download/{theme}', name: 'app_certification_download')]
     #[IsGranted('ROLE_USER')]
     public function download(Theme $theme): Response
@@ -154,6 +204,9 @@ class CertificationController extends AbstractController
 
     /**
      * Convertit une chaîne en slug (pour le nom de fichier)
+     * 
+     * @param string $text Texte à convertir en slug
+     * @return string Texte converti en slug
      */
     private function slugify(string $text): string
     {

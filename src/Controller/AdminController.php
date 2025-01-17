@@ -15,9 +15,32 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * Contrôleur de gestion de l'interface d'administration
+ * 
+ * Ce contrôleur gère toutes les fonctionnalités d'administration :
+ * - Tableau de bord administrateur
+ * - Gestion des utilisateurs (liste, activation/désactivation)
+ * - Gestion des thèmes (création, modification)
+ * - Gestion des cursus (création, modification)
+ * - Gestion des leçons (création, modification)
+ */
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
+    /**
+     * Affiche le tableau de bord administrateur
+     * 
+     * Récupère et affiche :
+     * - La liste de tous les utilisateurs
+     * - La liste de tous les thèmes
+     * - La liste de tous les cursus
+     * - La liste de toutes les leçons
+     * 
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @return Response Vue du tableau de bord
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/', name: 'app_admin_dashboard')]
     public function index(EntityManagerInterface $entityManager): Response
     {
@@ -36,6 +59,13 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche la liste des utilisateurs
+     * 
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @return Response Vue de la liste des utilisateurs
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/users', name: 'app_admin_users')]
     public function users(EntityManagerInterface $entityManager): Response
     {
@@ -48,6 +78,16 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Active ou désactive un utilisateur
+     * 
+     * Inverse l'état actif/inactif d'un utilisateur et redirige vers la liste des utilisateurs
+     * 
+     * @param User $user Utilisateur à modifier
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @return Response Redirection vers la liste des utilisateurs
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/user/{id}/toggle-active', name: 'app_admin_user_toggle')]
     public function toggleUserActive(
         User $user,
@@ -61,6 +101,18 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('app_admin_users');
     }
 
+    /**
+     * Crée ou modifie un thème
+     * 
+     * Affiche et traite le formulaire de création/modification d'un thème
+     * En cas de succès, redirige vers le tableau de bord
+     * 
+     * @param Request $request Requête HTTP
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @param Theme|null $theme Thème à modifier (null pour création)
+     * @return Response Vue du formulaire ou redirection
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/theme/new', name: 'app_admin_theme_new')]
     #[Route('/theme/{id}/edit', name: 'app_admin_theme_edit')]
     public function themeForm(
@@ -88,6 +140,18 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Crée ou modifie un cursus
+     * 
+     * Affiche et traite le formulaire de création/modification d'un cursus
+     * En cas de succès, redirige vers le tableau de bord
+     * 
+     * @param Request $request Requête HTTP
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @param Cursus|null $cursus Cursus à modifier (null pour création)
+     * @return Response Vue du formulaire ou redirection
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/cursus/new', name: 'app_admin_cursus_new')]
     #[Route('/cursus/{id}/edit', name: 'app_admin_cursus_edit')]
     public function cursusForm(
@@ -115,6 +179,18 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Crée ou modifie une leçon
+     * 
+     * Affiche et traite le formulaire de création/modification d'une leçon
+     * En cas de succès, redirige vers le tableau de bord
+     * 
+     * @param Request $request Requête HTTP
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @param Lesson|null $lesson Leçon à modifier (null pour création)
+     * @return Response Vue du formulaire ou redirection
+     * @throws AccessDeniedException Si l'utilisateur n'a pas le rôle ROLE_ADMIN
+     */
     #[Route('/lesson/new', name: 'app_admin_lesson_new')]
     #[Route('/lesson/{id}/edit', name: 'app_admin_lesson_edit')]
     public function lessonForm(
