@@ -20,22 +20,33 @@
 ## Installation
 
 ### 1. Cloner le projet
-git clone [URL_DU_PROJET]
-cd [NOM_DU_PROJET]
+
+```bash
+git clone https://github.com/ton-utilisateur/knowledge-learning.git
+cd knowledge-learning
+```
+
 
 ### 2. Installer les dépendances
+
+```bash
 composer install
 npm install
+```
 
 ### 3. Créer la base de données
+
+```bash
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
+```
 
 ## Configuration
 
 ### 1. Variables d'environnement
 Copier le fichier `.env` en `.env.local` et configurer :
 
+```bash
 DATABASE_URL="mysql://user:password@127.0.0.1:3306/db_name"
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_PUBLIC_KEY="pk_test_..."
@@ -45,6 +56,7 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 MAILER_DSN=gmail://YOUR_GMAIL:YOUR_APP_PASSWORD@default
 MAILER_FROM_ADDRESS=your.email@gmail.com
 MAILER_FROM_NAME="Your Application Name"
+```
 
 ### 2. Configuration Gmail
 1. Activer la validation en deux étapes sur votre compte Gmail
@@ -62,25 +74,34 @@ MAILER_FROM_NAME="Your Application Name"
 ## Démarrage
 
 ### 1. Lancer le serveur de développement
+
+```bash
 symfony serve -d
+```
 
 ### 2. Compiler les assets
+
+```bash
 npm run dev
+```
 
 ### 3. Créer un administrateur
-php bin/console app:create-admin
 
-L'application est accessible à : `http://localhost:8000`
+```bash
+php bin/console app:create-admin
+```
+
+L'application est accessible à : `http://http://127.0.0.1:8000/`
 
 ## Tests
 
 ### Lancer les tests unitaires
+
+```bash
 php bin/console doctrine:database:create --env=test
 php bin/console doctrine:schema:create --env=test
 php bin/phpunit
-
-### Lancer les tests de qualité
-composer check-quality
+```
 
 ## Documentation
 
@@ -109,4 +130,4 @@ Pour toute question ou problème :
 - Contacter l'équipe technique
 
 ## Licence
-Ce projet est sous licence [TYPE_DE_LICENCE]
+Ce projet est en accès gratuit
