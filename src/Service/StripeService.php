@@ -70,11 +70,11 @@ class StripeService
      * @return Session Session de paiement Stripe
      * @throws \Exception Si la création de la session échoue
      */
-    private function createCheckoutSession(string $name, string $description, float $price, User $user, array $metadata): Session
+    private function createCheckoutSession(string $name, ?string $description, float $price, User $user, array $metadata): Session
     {
         try {
-            // Nettoyer et limiter la description
-            $description = html_entity_decode(strip_tags($description));
+            // Nettoyer et limiter la description, gérer le cas null
+            $description = $description ? html_entity_decode(strip_tags($description)) : '';
             $description = substr($description, 0, 150) . '...';
 
             return Session::create([

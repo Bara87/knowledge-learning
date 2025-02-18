@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Theme;
 use App\Entity\Cursus;
 use App\Entity\Lesson;
+use App\Entity\Purchase;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -64,19 +65,33 @@ class CourseController extends AbstractController
      * - Affiche le contenu complet si accès autorisé
      * 
      * @param Cursus $cursus Cursus à afficher
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
      * @return Response Vue du cursus ou redirection
      */
     #[Route('/cursus/{id}', name: 'app_cursus_show')]
-    public function showCursus(Cursus $cursus): Response
-    {
-        // Vérifier si l'utilisateur est connecté et a les droits d'accès
+    public function showCursus(
+        Cursus $cursus,
+        EntityManagerInterface $entityManager
+    ): Response {
         if (!$this->isGranted('VIEW', $cursus)) {
             if (!$this->isGranted('ROLE_USER')) {
                 $this->addFlash('warning', 'Veuillez vous connecter pour accéder à ce cursus.');
                 return $this->redirectToRoute('app_login');
             }
             
-            // Au lieu de rediriger, on affiche la page avec un message d'achat
+            // Vérifier si l'utilisateur a déjà acheté ce cursus
+            $purchase = $entityManager->getRepository(Purchase::class)->findOneBy([
+                'user' => $this->getUser(),
+                'cursus' => $cursus,
+                'status' => Purchase::STATUS_COMPLETED
+            ]);
+
+            if ($purchase) {
+                return $this->render('course/cursus.html.twig', [
+                    'cursus' => $cursus,
+                ]);
+            }
+            
             return $this->render('course/cursus_preview.html.twig', [
                 'cursus' => $cursus,
                 'needsPurchase' => true
@@ -97,26 +112,48 @@ class CourseController extends AbstractController
      * - Affiche le contenu si la leçon ou le cursus parent est acheté
      * 
      * @param Lesson $lesson Leçon à afficher
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
      * @return Response Vue de la leçon ou redirection
      */
     #[Route('/lesson/{id}', name: 'app_lesson_show')]
-    public function showLesson(Lesson $lesson): Response
-    {
-        // Vérifier si l'utilisateur est connecté et a les droits d'accès
+    public function showLesson(
+        Lesson $lesson,
+        EntityManagerInterface $entityManager
+    ): Response {
         if (!$this->isGranted('VIEW', $lesson)) {
             if (!$this->isGranted('ROLE_USER')) {
                 $this->addFlash('warning', 'Veuillez vous connecter pour accéder à cette leçon.');
                 return $this->redirectToRoute('app_login');
             }
 
-            // Si le cursus parent est déjà acheté, pas besoin d'acheter la leçon individuellement
-            if ($lesson->getCursus() && $this->isGranted('VIEW', $lesson->getCursus())) {
+            // Vérifier si le cursus parent est déjà acheté
+            if ($lesson->getCursus()) {
+                $cursusPurchase = $entityManager->getRepository(Purchase::class)->findOneBy([
+                    'user' => $this->getUser(),
+                    'cursus' => $lesson->getCursus(),
+                    'status' => Purchase::STATUS_COMPLETED
+                ]);
+
+                if ($cursusPurchase) {
+                    return $this->render('course/lesson.html.twig', [
+                        'lesson' => $lesson,
+                    ]);
+                }
+            }
+
+            // Vérifier si la leçon individuelle est achetée
+            $lessonPurchase = $entityManager->getRepository(Purchase::class)->findOneBy([
+                'user' => $this->getUser(),
+                'lesson' => $lesson,
+                'status' => Purchase::STATUS_COMPLETED
+            ]);
+
+            if ($lessonPurchase) {
                 return $this->render('course/lesson.html.twig', [
                     'lesson' => $lesson,
                 ]);
             }
             
-            // Au lieu de rediriger, on affiche la page avec un message d'achat
             return $this->render('course/lesson_preview.html.twig', [
                 'lesson' => $lesson,
                 'needsPurchase' => true

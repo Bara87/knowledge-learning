@@ -18,6 +18,24 @@ use DateTimeImmutable;
 #[ORM\Entity(repositoryClass: PurchaseRepository::class)]
 class Purchase
 {
+    /**
+     * Constantes de statut
+     */
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_FAILED = 'failed';
+
+    /**
+     * Liste des statuts valides
+     */
+    public const VALID_STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_COMPLETED,
+        self::STATUS_EXPIRED,
+        self::STATUS_FAILED
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -49,10 +67,10 @@ class Purchase
     private float $amount;
 
     /**
-     * Statut de l'achat (pending, completed, expired)
+     * Statut de l'achat
      */
     #[ORM\Column(length: 255)]
-    private string $status = 'pending';
+    private string $status = self::STATUS_PENDING;
 
     /**
      * Identifiant de la session Stripe
@@ -138,6 +156,12 @@ class Purchase
 
     public function setStatus(string $status): self
     {
+        if (!in_array($status, self::VALID_STATUSES)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Statut invalide. Les statuts valides sont : %s',
+                implode(', ', self::VALID_STATUSES)
+            ));
+        }
         $this->status = $status;
         return $this;
     }
@@ -182,7 +206,7 @@ class Purchase
      */
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === self::STATUS_COMPLETED;
     }
 
     /**
@@ -192,7 +216,7 @@ class Purchase
      */
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return $this->status === self::STATUS_PENDING;
     }
 
     /**
@@ -202,6 +226,11 @@ class Purchase
      */
     public function isExpired(): bool
     {
-        return $this->status === 'expired';
+        return $this->status === self::STATUS_EXPIRED;
+    }
+
+    public function isFailed(): bool
+    {
+        return $this->status === self::STATUS_FAILED;
     }
 }
