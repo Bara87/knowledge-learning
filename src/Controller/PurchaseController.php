@@ -15,9 +15,25 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Contrôleur de gestion des achats
+ * 
+ * Ce contrôleur gère toutes les opérations liées aux achats :
+ * - Achat de cursus complets
+ * - Achat de leçons individuelles
+ * - Traitement des webhooks Stripe
+ * - Gestion des succès/échecs de paiement
+ */
 #[Route('/purchase')]
 class PurchaseController extends AbstractController
 {
+    /**
+     * Constructeur avec injection des dépendances
+     * 
+     * @param EntityManagerInterface $entityManager Gestionnaire d'entités Doctrine
+     * @param StripeService $stripeService Service de gestion des paiements Stripe
+     * @param LoggerInterface $logger Service de logging
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private StripeService $stripeService,
@@ -25,6 +41,19 @@ class PurchaseController extends AbstractController
     ) {
     }
 
+    /**
+     * Gère l'achat d'un cursus
+     * 
+     * Processus :
+     * 1. Vérifie si le cursus est payant
+     * 2. Vérifie si l'utilisateur n'a pas déjà acheté ce cursus
+     * 3. Crée une session de paiement Stripe
+     * 4. Enregistre l'achat en statut 'pending'
+     * 5. Redirige vers la page de paiement Stripe
+     * 
+     * @param Cursus $cursus Cursus à acheter
+     * @throws AccessDeniedException Si le cursus est gratuit
+     */
     #[Route('/cursus/{id}', name: 'app_purchase_cursus', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function purchaseCursus(Cursus $cursus): Response
@@ -69,6 +98,19 @@ class PurchaseController extends AbstractController
         }
     }
 
+    /**
+     * Gère l'achat d'une leçon individuelle
+     * 
+     * Processus :
+     * 1. Vérifie si la leçon est payante
+     * 2. Vérifie si l'utilisateur n'a pas déjà acheté cette leçon
+     * 3. Vérifie si la leçon ne fait pas partie d'un cursus déjà acheté
+     * 4. Crée une session de paiement Stripe
+     * 5. Enregistre l'achat en statut 'pending'
+     * 
+     * @param Lesson $lesson Leçon à acheter
+     * @throws AccessDeniedException Si la leçon est gratuite
+     */
     #[Route('/lesson/{id}', name: 'app_purchase_lesson', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function purchaseLesson(Lesson $lesson): Response
@@ -127,6 +169,17 @@ class PurchaseController extends AbstractController
         }
     }
 
+    /**
+     * Traite les webhooks Stripe
+     * 
+     * Gère les événements de paiement :
+     * - Vérifie l'authenticité du webhook
+     * - Traite l'événement 'checkout.session.completed'
+     * - Met à jour le statut de l'achat
+     * - Enregistre les logs
+     * 
+     * @param Request $request Requête contenant les données du webhook
+     */
     #[Route('/webhook', name: 'app_purchase_webhook', methods: ['POST'])]
     public function webhook(Request $request): Response
     {
@@ -177,6 +230,16 @@ class PurchaseController extends AbstractController
         }
     }
 
+    /**
+     * Traite un payment intent Stripe
+     * 
+     * Méthode privée utilisée pour :
+     * - Rechercher l'achat correspondant
+     * - Mettre à jour son statut si le paiement est réussi
+     * - Logger les informations
+     * 
+     * @param mixed $paymentIntent Objet payment intent de Stripe
+     */
     private function handlePaymentIntent($paymentIntent): void
     {
         $this->logger->info('Traitement payment intent', [
@@ -200,6 +263,11 @@ class PurchaseController extends AbstractController
         }
     }
 
+    /**
+     * Page de succès après paiement
+     * 
+     * Affiche un message de confirmation et redirige vers le profil
+     */
     #[Route('/success', name: 'app_purchase_success')]
     #[IsGranted('ROLE_USER')]
     public function success(): Response
@@ -208,6 +276,11 @@ class PurchaseController extends AbstractController
         return $this->redirectToRoute('app_profile');
     }
 
+    /**
+     * Page d'annulation de paiement
+     * 
+     * Affiche un message d'erreur et redirige vers l'accueil
+     */
     #[Route('/cancel', name: 'app_purchase_cancel')]
     #[IsGranted('ROLE_USER')]
     public function cancel(): Response
@@ -216,6 +289,16 @@ class PurchaseController extends AbstractController
         return $this->redirectToRoute('app_home');
     }
 
+    /**
+     * Traite une session de checkout Stripe
+     * 
+     * Méthode privée utilisée pour :
+     * - Rechercher l'achat par session ID ou payment intent
+     * - Mettre à jour son statut selon le statut du paiement
+     * - Logger les informations
+     * 
+     * @param mixed $session Objet session de Stripe
+     */
     private function handleCheckoutSession($session): void
     {
         $this->logger->info('Traitement session checkout', [
@@ -224,12 +307,10 @@ class PurchaseController extends AbstractController
             'payment_status' => $session->payment_status
         ]);
 
-        // Rechercher d'abord par session_id
         $purchase = $this->entityManager->getRepository(Purchase::class)
             ->findOneBy(['stripeSessionId' => $session->id]);
 
         if (!$purchase) {
-            // Si non trouvé, chercher par payment_intent
             $purchase = $this->entityManager->getRepository(Purchase::class)
                 ->findOneBy(['stripeSessionId' => $session->payment_intent]);
         }
@@ -237,12 +318,11 @@ class PurchaseController extends AbstractController
         if ($purchase) {
             $this->logger->info('Purchase trouvé', [
                 'id' => $purchase->getId(),
-                'old_status' => $purchase->getStatus(),
-                'stripe_session_id' => $purchase->getStripeSessionId()
+                'old_status' => $purchase->getStatus()
             ]);
 
             if ($session->payment_status === 'paid') {
-                $purchase->setStatus('completed')
+                $purchase->setStatus(Purchase::STATUS_COMPLETED)
                         ->setUpdatedAt(new DateTimeImmutable());
                 
                 $this->entityManager->flush();
@@ -251,12 +331,12 @@ class PurchaseController extends AbstractController
                     'id' => $purchase->getId(),
                     'new_status' => $purchase->getStatus()
                 ]);
+            } elseif ($session->payment_status === 'failed') {
+                $purchase->setStatus(Purchase::STATUS_FAILED)
+                        ->setUpdatedAt(new DateTimeImmutable());
+                
+                $this->entityManager->flush();
             }
-        } else {
-            $this->logger->error('Purchase non trouvé', [
-                'session_id' => $session->id,
-                'payment_intent' => $session->payment_intent
-            ]);
         }
     }
 }

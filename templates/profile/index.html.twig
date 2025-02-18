@@ -63,20 +63,25 @@
                     <div class="list-group">
                         {% for purchase in purchases %}
                             <div class="list-group-item">
-                                {% if purchase.cursus %}
-                                    <h6>
-                                        <a href="{{ path('app_cursus_show', {'id': purchase.cursus.id}) }}" class="text-decoration-none">
-                                            Cursus : {{ purchase.cursus.title }}
-                                        </a>
-                                    </h6>
-                                {% else %}
-                                    <h6>
-                                        <a href="{{ path('app_lesson_show', {'id': purchase.lesson.id}) }}" class="text-decoration-none">
-                                            Leçon : {{ purchase.lesson.title }}
-                                        </a>
-                                    </h6>
+                                {% if purchase.status == 'completed' %}
+                                    {% if purchase.cursus %}
+                                        <h6>
+                                            <a href="{{ path('app_cursus_show', {'id': purchase.cursus.id}) }}" class="text-decoration-none">
+                                                Cursus : {{ purchase.cursus.title }}
+                                            </a>
+                                        </h6>
+                                    {% else %}
+                                        <h6>
+                                            <a href="{{ path('app_lesson_show', {'id': purchase.lesson.id}) }}" class="text-decoration-none">
+                                                Leçon : {{ purchase.lesson.title }}
+                                            </a>
+                                        </h6>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        Acheté le {{ purchase.createdAt|date('d/m/Y') }}
+                                        <span class="badge bg-success">Complété</span>
+                                    </small>
                                 {% endif %}
-                                <small class="text-muted">Acheté le {{ purchase.createdAt|date('d/m/Y') }}</small>
                             </div>
                         {% endfor %}
                     </div>

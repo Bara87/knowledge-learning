@@ -52,20 +52,38 @@ class ProfileController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         
-        // Récupérer les achats complétés
+        // Récupérer les achats complétés avec les relations
         $purchases = $this->entityManager->getRepository(Purchase::class)
-            ->findBy([
-                'user' => $user,
-                'status' => 'completed'
-            ]);
+            ->createQueryBuilder('p')
+            ->leftJoin('p.cursus', 'c')
+            ->leftJoin('p.lesson', 'l')
+            ->where('p.user = :user')
+            ->andWhere('p.status = :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', Purchase::STATUS_COMPLETED)
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         // Récupérer les leçons validées
         $lessonValidations = $this->entityManager->getRepository(LessonValidation::class)
-            ->findBy(['user' => $user]);
+            ->createQueryBuilder('lv')
+            ->leftJoin('lv.lesson', 'l')
+            ->where('lv.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('lv.validatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         // Récupérer les certifications
         $certifications = $this->entityManager->getRepository(Certification::class)
-            ->findBy(['user' => $user]);
+            ->createQueryBuilder('c')
+            ->leftJoin('c.theme', 't')
+            ->where('c.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('c.obtainedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         return $this->render('profile/index.html.twig', [
             'purchases' => $purchases,

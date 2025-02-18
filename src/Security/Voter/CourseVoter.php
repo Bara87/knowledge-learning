@@ -7,21 +7,19 @@ use App\Entity\Lesson;
 use App\Entity\Purchase;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class CourseVoter extends Voter
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
-    ) {
-    }
+        private EntityManagerInterface $entityManager
+    ) {}
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute === 'VIEW' && ($subject instanceof Cursus || $subject instanceof Lesson);
+        return $attribute === 'VIEW' && 
+               ($subject instanceof Cursus || $subject instanceof Lesson);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -30,6 +28,11 @@ class CourseVoter extends Voter
         
         if (!$user instanceof User) {
             return false;
+        }
+
+        // Si admin, accès total
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            return true;
         }
 
         if ($subject instanceof Cursus) {
@@ -45,7 +48,12 @@ class CourseVoter extends Voter
 
     private function canViewCursus(Cursus $cursus, User $user): bool
     {
-        // Vérifier si l'utilisateur a acheté le cursus
+        // Si cursus gratuit
+        if ($cursus->getPrice() <= 0) {
+            return true;
+        }
+
+        // Vérifier l'achat du cursus
         $purchase = $this->entityManager->getRepository(Purchase::class)
             ->findOneBy([
                 'user' => $user,
@@ -53,24 +61,17 @@ class CourseVoter extends Voter
                 'status' => 'completed'
             ]);
 
-        if ($purchase) {
-            $this->logger->info('Accès autorisé au cursus', [
-                'user_id' => $user->getId(),
-                'cursus_id' => $cursus->getId()
-            ]);
-            return true;
-        }
-
-        $this->logger->info('Accès refusé au cursus', [
-            'user_id' => $user->getId(),
-            'cursus_id' => $cursus->getId()
-        ]);
-        return false;
+        return $purchase !== null;
     }
 
     private function canViewLesson(Lesson $lesson, User $user): bool
     {
-        // Si la leçon fait partie d'un cursus, vérifier si l'utilisateur a acheté le cursus
+        // Si leçon gratuite
+        if ($lesson->getPrice() <= 0) {
+            return true;
+        }
+
+        // Vérifier si la leçon fait partie d'un cursus acheté
         if ($lesson->getCursus()) {
             $cursusPurchase = $this->entityManager->getRepository(Purchase::class)
                 ->findOneBy([
@@ -80,16 +81,11 @@ class CourseVoter extends Voter
                 ]);
 
             if ($cursusPurchase) {
-                $this->logger->info('Accès autorisé à la leçon via cursus', [
-                    'user_id' => $user->getId(),
-                    'lesson_id' => $lesson->getId(),
-                    'cursus_id' => $lesson->getCursus()->getId()
-                ]);
                 return true;
             }
         }
 
-        // Vérifier si l'utilisateur a acheté la leçon individuellement
+        // Vérifier l'achat individuel de la leçon
         $lessonPurchase = $this->entityManager->getRepository(Purchase::class)
             ->findOneBy([
                 'user' => $user,
@@ -97,18 +93,6 @@ class CourseVoter extends Voter
                 'status' => 'completed'
             ]);
 
-        if ($lessonPurchase) {
-            $this->logger->info('Accès autorisé à la leçon individuelle', [
-                'user_id' => $user->getId(),
-                'lesson_id' => $lesson->getId()
-            ]);
-            return true;
-        }
-
-        $this->logger->info('Accès refusé à la leçon', [
-            'user_id' => $user->getId(),
-            'lesson_id' => $lesson->getId()
-        ]);
-        return false;
+        return $lessonPurchase !== null;
     }
 }
